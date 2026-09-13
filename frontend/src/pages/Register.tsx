@@ -61,52 +61,57 @@ export function Register() {
             あなたの『やってみたい』が広がるかもしれません。
           </p>
         </div>
-        <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 20, textAlign: "center", color: "var(--accent-ink)" }}>
-          新規登録
-        </h1>
-        <form onSubmit={handleSubmit} className="form" style={{ alignItems: "center", textAlign: "center" }}>
-          <label className="field">
-            ユーザー名
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              onPaste={resyncAfterPaste(setUsername)}
+        {/* 写真の部分と同じように、こちらも画面の高さいっぱいを使って縦に中央寄せする。
+            スマホでスクロールしたときに、ちょうどこの新規登録フォームが画面の
+            真ん中に来るようにするため */}
+        <div className="register-form-section">
+          <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 20, textAlign: "center", color: "var(--accent-ink)" }}>
+            新規登録
+          </h1>
+          <form onSubmit={handleSubmit} className="form register-form" style={{ alignItems: "center", textAlign: "center" }}>
+            <label className="field">
+              ユーザー名
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onPaste={resyncAfterPaste(setUsername)}
+                required
+              />
+            </label>
+            <label className="field">
+              メールアドレス
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onPaste={resyncAfterPaste(setEmail)}
+                autoComplete="email"
+                required
+              />
+            </label>
+            <PasswordField
+              label="パスワード(8文字以上)"
+              value={password}
+              onChange={setPassword}
+              minLength={8}
               required
+              autoComplete="new-password"
             />
-          </label>
-          <label className="field">
-            メールアドレス
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onPaste={resyncAfterPaste(setEmail)}
-              autoComplete="email"
-              required
-            />
-          </label>
-          <PasswordField
-            label="パスワード(8文字以上)"
-            value={password}
-            onChange={setPassword}
-            minLength={8}
-            required
-            autoComplete="new-password"
-          />
-          {error && <p className="error-text">{error}</p>}
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={submitting}
-            style={{ alignSelf: "center" }}
-          >
-            {submitting ? "登録中..." : "登録"}
-          </button>
-        </form>
-        <p className="muted-text" style={{ marginTop: 16, textAlign: "center" }}>
-          アカウントをお持ちの方は <Link to="/login">こちら</Link>
-        </p>
+            {error && <p className="error-text">{error}</p>}
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={submitting}
+              style={{ alignSelf: "center" }}
+            >
+              {submitting ? "登録中..." : "登録"}
+            </button>
+          </form>
+          <p className="muted-text" style={{ marginTop: 16, textAlign: "center" }}>
+            アカウントをお持ちの方は <Link to="/login">こちら</Link>
+          </p>
+        </div>
       </main>
     </div>
   );

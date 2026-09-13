@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { upsertReactionRequest, deleteReactionRequest, getMyReactionRequest } from "../api/reactions";
+import { useFitRowScale } from "../hooks/useFitRowScale";
 import { REACTION_TYPES, REACTION_LABELS } from "../types/reaction";
 import type { ReactionType, ReactionCounts } from "../types/reaction";
 
@@ -10,6 +11,7 @@ export function ReactionBar({
   isOwnPost = false,
   showCounts = true,
   hideForOwnPost = true,
+  fitToRow = false,
 }: {
   postId: number;
   initialCounts: ReactionCounts;
@@ -20,11 +22,17 @@ export function ReactionBar({
   // 自分の投稿のとき、何も表示しない(true, 従来の挙動)か、
   // 押せないバッジとして件数だけ表示する(false)かを選べる
   hideForOwnPost?: boolean;
+  // 折り返さず常に横一列(横スクロールなし)に収める(みんなのリストで使用)
+  fitToRow?: boolean;
 }) {
   const { user } = useAuth();
   const [counts, setCounts] = useState(initialCounts);
   const [myReaction, setMyReaction] = useState<ReactionType | null>(null);
   const [pending, setPending] = useState(false);
+
+  // 横幅に応じて縮小し、fitToRowのときは折り返さず1行に収める
+  const rowRef = useFitRowScale<HTMLDivElement>("--reaction-scale", 1, [fitToRow]);
+  const rowClassName = `reaction-row${fitToRow ? " reaction-row-nowrap" : ""}`;
 
   useEffect(() => {
     if (!user || isOwnPost) {
@@ -42,7 +50,7 @@ export function ReactionBar({
       return null;
     }
     return (
-      <div className="reaction-row">
+      <div className={rowClassName} ref={fitToRow ? rowRef : undefined}>
         {REACTION_TYPES.map((type) => (
           <span key={type} className="reaction-btn no-border">
             <span>{REACTION_LABELS[type].emoji}</span>
@@ -80,7 +88,7 @@ export function ReactionBar({
   }
 
   return (
-    <div className="reaction-row">
+    <div className={rowClassName} ref={fitToRow ? rowRef : undefined}>
       {REACTION_TYPES.map((type) => {
         const active = myReaction === type;
         return (

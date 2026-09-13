@@ -108,7 +108,7 @@ export function PostCard({ post, onDeleted }: { post: Post; onDeleted?: () => vo
         className={`achieve-btn${isAchieved ? " achieved" : ""}`}
         title={isAchieved ? "達成済み(取り消しはできません)" : "達成としてマークする"}
       >
-        {isAchieved ? "🎉達成" : "達成済みにする"}
+        {isAchieved ? "🎉達成" : "達成"}
       </button>
       {showConfirm && (
         <ConfirmModal

@@ -113,8 +113,10 @@ button:focus-visible {
    ========================================================================== */
 .site-header {
   --header-scale: 1;
-  position: relative; /* 背景の星(position: fixed)より確実に前面に出すための重ね順の基準 */
-  z-index: 1;
+  /* スクロールしても常に画面上部に固定表示する */
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -123,9 +125,10 @@ button:focus-visible {
      測って縮小することで、狭い画面でもロゴ+navが1行に収まるようにしている */
   flex-wrap: nowrap;
   padding: 14px 20px;
-  /* 単色にせず透明にすることで、body側の背景(ログイン画面と同じグラデーション)が
-     ヘッダーにもそのまま続いて見えるようにする。境界線もなくして継ぎ目をなくす */
-  background: transparent;
+  /* 固定表示にすると下のカード等が透けて見えてしまうため、背景色は不透明にする */
+  background: var(--bg);
+  /* スクロールした内容の上に浮いていることが分かるよう、薄く影を付ける */
+  box-shadow: var(--shadow);
 }
 
 .site-header .brand {
@@ -368,6 +371,24 @@ button:focus-visible {
   font-size: 15px;
 }
 
+/* 新規登録画面: ユーザー名・メールアドレスは日本語10文字分の幅に揃え、
+   パスワード欄は入力欄+表示ボタンを合わせた幅がそれと同じになるようにする。
+   (全角文字はほぼ1em幅なので、chではなくemを使う。paddingとborderの分だけ
+   余分に足して、実際に10文字分入力できる幅にする) */
+.register-form {
+  --register-field-width: calc(10em + 22px);
+}
+
+.register-form .field > input {
+  width: var(--register-field-width);
+}
+
+.register-form .password-input {
+  width: var(--register-field-width);
+  /* chはフォントサイズに依存するため、input側(15px)と揃えて誤差が出ないようにする */
+  font-size: 15px;
+}
+
 /* トグルボタンを入力欄の上に重ねると、クリック位置によっては
    ボタン側がクリックを奪ってしまい(カーソル位置指定・右クリック貼り付けなど)、
    入力欄本体を正しく操作できないことがあるため、隣に並べる形にしている */
@@ -384,14 +405,14 @@ button:focus-visible {
 
 .password-toggle {
   flex-shrink: 0;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--panel);
-  padding: 0 12px;
-  font-size: 13px;
-  font-weight: 600;
   color: var(--text);
-  white-space: nowrap;
 }
 
 .password-toggle:hover {
@@ -443,7 +464,8 @@ fieldset.tag-fieldset legend {
    ========================================================================== */
 .card {
   display: flex;
-  align-items: flex-start;
+  /* 「達成」ボタンをカードの左側で縦方向にも中央に配置する */
+  align-items: center;
   gap: 12px;
   padding: 18px;
   border: 1px solid var(--border);
@@ -663,6 +685,22 @@ fieldset.tag-fieldset legend {
   margin-top: 20px;
 }
 
+/* みんなのリストの他人の投稿など、折り返さず常に横一列(横スクロールなし)で
+   見せたい場所で使う。縮むだけで、余裕があっても元のサイズより大きくはしない */
+.reaction-row-nowrap {
+  --reaction-scale: 1;
+  flex-wrap: nowrap;
+  gap: calc(8px * var(--reaction-scale));
+  overflow-x: auto;
+}
+
+.reaction-row-nowrap .reaction-btn {
+  flex-shrink: 0;
+  gap: calc(6px * var(--reaction-scale));
+  padding: calc(7px * var(--reaction-scale)) calc(12px * var(--reaction-scale));
+  font-size: calc(14px * var(--reaction-scale));
+}
+
 .reaction-btn {
   display: flex;
   align-items: center;
@@ -878,6 +916,16 @@ table.admin-table {
   flex-direction: column;
   justify-content: center;
   margin-bottom: 40px;
+}
+
+/* 「新規登録」の見出し〜「アカウントをお持ちの方はこちら」までの部分も、
+   写真の部分と同じく画面の高さいっぱいを使って縦に中央寄せする。
+   スマホでスクロールしたとき、ちょうどこのフォームが画面の真ん中に来るようにするため */
+.register-form-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .register-hero-photo {

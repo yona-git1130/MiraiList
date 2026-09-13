@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import { resyncAfterPaste } from "../utils/pasteSync";
+import { EyeIcon } from "./EyeIcon";
 
 type PasswordFieldProps = {
   label: string;
@@ -44,8 +45,9 @@ export function PasswordField({
           className="password-toggle"
           onClick={() => setVisible((v) => !v)}
           aria-label={visible ? "パスワードを非表示にする" : "パスワードを表示する"}
+          title={visible ? "パスワードを非表示にする" : "パスワードを表示する"}
         >
-          {visible ? "隠す" : "表示"}
+          <EyeIcon visible={visible} />
         </button>
       </div>
     </label>

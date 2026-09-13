@@ -3,6 +3,7 @@ import { Header } from "../components/Header";
 import { PostCard } from "../components/PostCard";
 import { listPostsRequest } from "../api/posts";
 import { listTagsRequest } from "../api/tags";
+import { useFitRowScale } from "../hooks/useFitRowScale";
 import type { Post } from "../types/post";
 import type { Tag } from "../types/tag";
 
@@ -48,12 +49,15 @@ export function PostList() {
 
   const selectedTag = tags.find((tag) => tag.id === selectedTagId);
 
+  // タグ絞り込みの行を、みんなのリストと同じく常に投稿カードと同じ幅ぴったりに収める
+  const filterRowRef = useFitRowScale<HTMLDivElement>("--tag-scale", Infinity, [tags]);
+
   return (
     <>
       <Header />
       <main className="page">
         <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 20, color: "var(--accent-ink)" }}>マイリスト</h1>
-        <div className="filter-row">
+        <div className="filter-row filter-row-nowrap" ref={filterRowRef}>
           <button
             onClick={selectAll}
             className={`filter-btn${selectedTagId === undefined && !achievedOnly ? " active" : ""}`}

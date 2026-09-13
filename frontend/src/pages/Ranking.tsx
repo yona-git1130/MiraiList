@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Header } from "../components/Header";
 import { ReactionBar } from "../components/ReactionBar";
@@ -7,6 +7,7 @@ import { getRankingRequest } from "../api/ranking";
 import { deletePostRequest } from "../api/posts";
 import { listTagsRequest } from "../api/tags";
 import { useAuth } from "../context/AuthContext";
+import { useFitRowScale } from "../hooks/useFitRowScale";
 import type { RankingEntry } from "../types/ranking";
 import type { Tag } from "../types/tag";
 
@@ -39,46 +40,9 @@ export function Ranking() {
 
   const selectedTag = tags.find((tag) => tag.id === selectedTagId);
 
-  // タグ絞り込みの行を、常に投稿カードと同じ幅ぴったりに収まる大きさに調整する。
-  // CSSの計算式だけでは画面幅ごとに微妙にずれてしまうため、実際に描画された
-  // 幅を測って倍率を掛け直す方式にしている。
-  const filterRowRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const row = filterRowRef.current;
-    if (!row) return;
-
-    function fit() {
-      if (!row) return;
-      // 一旦倍率をリセットして、基準サイズ(等倍)での「そのままの幅」を測る
-      row.style.removeProperty("--tag-scale");
-      const available = row.clientWidth;
-      const natural = row.scrollWidth;
-      if (natural === 0 || available === 0) return;
-
-      // 枠線の太さなど倍率をかけても変わらない部分があるため、一度掛けただけでは
-      // ぴったり合わないことがある。実際に反映された幅を測り直し、ずれた分だけ
-      // 追加で補正することで、確実に収まる倍率に近づける。
-      let scale = available / natural;
-      for (let i = 0; i < 3; i++) {
-        row.style.setProperty("--tag-scale", String(scale));
-        const actual = row.scrollWidth;
-        if (actual <= available || actual === 0) break;
-        scale *= available / actual;
-      }
-      // 最後に少しだけ余裕を持たせ、丸め誤差ではみ出さないようにする
-      row.style.setProperty("--tag-scale", String(scale * 0.995));
-    }
-
-    fit();
-    const observer = new ResizeObserver(fit);
-    observer.observe(row);
-    window.addEventListener("resize", fit);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", fit);
-    };
-  }, [tags]);
+  // タグ絞り込みの行を、常に投稿カードと同じ幅ぴったりに収まる大きさに調整する
+  // (余裕があれば拡大もするので、maxScaleはInfinity)
+  const filterRowRef = useFitRowScale<HTMLDivElement>("--tag-scale", Infinity, [tags]);
 
   function selectAll() {
     setSelectedTagId(undefined);
@@ -149,7 +113,9 @@ export function Ranking() {
           {ranking.map((entry, index) => (
             <li key={entry.post_id} className={`rank-item${entry.is_achieved ? " achieved" : ""}`}>
               <span className="rank-number">{index + 1}</span>
-              <div style={{ flex: 1 }}>
+              {/* minWidth: 0 がないと、中の横一列(タグ・リアクション等)に押されて
+                  このflexアイテム自体がカードの幅からはみ出してしまう */}
+              <div style={{ flex: 1, minWidth: 0 }}>
                 {/* 操作はできないので、リスト一覧のボタンと違いbuttonではなくバッジ(span)で表示のみ行う */}
                 {entry.is_achieved && (
                   <span
@@ -206,6 +172,7 @@ export function Ranking() {
                   initialCounts={entry.counts}
                   isOwnPost={!!user && user.id === entry.author_id}
                   hideForOwnPost={false}
+                  fitToRow
                 />
               </div>
             </li>

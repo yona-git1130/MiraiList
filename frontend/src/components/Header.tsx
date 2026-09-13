@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useFitRowScale } from "../hooks/useFitRowScale";
 import { UserMenu } from "./UserMenu";
 
 export function Header() {
@@ -11,38 +11,8 @@ export function Header() {
 
   // スマホの狭い画面でも、ロゴとnavが折り返さずPCと同じ1行の配置になるよう、
   // 実際に描画された幅を測って縮小率(--header-scale)を掛け直す。
-  const headerRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const header = headerRef.current;
-    if (!header) return;
-
-    function fit() {
-      if (!header) return;
-      header.style.removeProperty("--header-scale");
-      const available = header.clientWidth;
-      const natural = header.scrollWidth;
-      if (natural === 0 || available === 0) return;
-
-      let scale = Math.min(available / natural, 1);
-      for (let i = 0; i < 3; i++) {
-        header.style.setProperty("--header-scale", String(scale));
-        const actual = header.scrollWidth;
-        if (actual <= available) break;
-        scale *= available / actual;
-      }
-      header.style.setProperty("--header-scale", String(Math.min(scale * 0.99, 1)));
-    }
-
-    fit();
-    const observer = new ResizeObserver(fit);
-    observer.observe(header);
-    window.addEventListener("resize", fit);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", fit);
-    };
-  }, [user]);
+  // (縮むだけで、余裕があっても元のサイズより大きくはしないのでmaxScale: 1)
+  const headerRef = useFitRowScale<HTMLElement>("--header-scale", 1, [user]);
 
   return (
     <>
