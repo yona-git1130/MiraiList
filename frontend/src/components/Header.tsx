@@ -6,7 +6,8 @@ import { UserMenu } from "./UserMenu";
 /**
  * 全画面共通のヘッダー。ロゴとナビゲーション(ログイン状態で内容が変わる)を表示する。
  * ログイン中: リストに追加・マイリスト・みんなのリスト・ユーザーメニュー
- * 未ログイン: みんなのリスト・ログイン・新規登録(ログイン/新規登録画面ではリンクを一部省略)
+ * 未ログイン: ログイン・新規登録のみ(みんなのリストはログイン必須のため表示しない。
+ * ログイン/新規登録画面ではリンクを一部省略)
  */
 export function Header() {
   const { user, logout } = useAuth();
@@ -35,7 +36,6 @@ export function Header() {
             </>
           ) : (
             <>
-              {!isLoginPage && !isRegisterPage && <Link to="/ranking">みんなのリスト</Link>}
               {!isLoginPage && (
                 // 新規登録画面では、登録ボタンと同じ見た目(btn-primary)で目立たせる
                 <Link to="/login" className={isRegisterPage ? "btn btn-primary" : "btn"}>

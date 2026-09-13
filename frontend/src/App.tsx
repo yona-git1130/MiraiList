@@ -53,7 +53,14 @@ function AppRoutes() {
           </RequireAuth>
         }
       />
-      <Route path="/posts/:id" element={<PostDetail />} />
+      <Route
+        path="/posts/:id"
+        element={
+          <RequireAuth>
+            <PostDetail />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/posts/:id/edit"
         element={
@@ -70,7 +77,14 @@ function AppRoutes() {
           </RequireAuth>
         }
       />
-      <Route path="/ranking" element={<Ranking />} />
+      <Route
+        path="/ranking"
+        element={
+          <RequireAuth>
+            <Ranking />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/account"
         element={
