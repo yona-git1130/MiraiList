@@ -88,7 +88,7 @@ export function PostList() {
             {achievedOnly
               ? "達成した投稿がまだありません。"
               : selectedTag
-                ? `${selectedTag.name}の投稿がまだありません。`
+                ? `${selectedTag.name}のリストがまだありません`
                 : "リストに追加をするとこちらに表示されます"}
           </p>
         )}

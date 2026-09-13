@@ -371,20 +371,20 @@ button:focus-visible {
   font-size: 15px;
 }
 
-/* 新規登録画面: ユーザー名・メールアドレスは日本語10文字分の幅に揃え、
+/* 新規登録・ログイン画面共通: ユーザー名・メールアドレスは日本語10文字分の幅に揃え、
    パスワード欄は入力欄+表示ボタンを合わせた幅がそれと同じになるようにする。
    (全角文字はほぼ1em幅なので、chではなくemを使う。paddingとborderの分だけ
    余分に足して、実際に10文字分入力できる幅にする) */
-.register-form {
-  --register-field-width: calc(10em + 22px);
+.auth-form {
+  --auth-field-width: calc(10em + 22px);
 }
 
-.register-form .field > input {
-  width: var(--register-field-width);
+.auth-form .field > input {
+  width: var(--auth-field-width);
 }
 
-.register-form .password-input {
-  width: var(--register-field-width);
+.auth-form .password-input {
+  width: var(--auth-field-width);
   /* chはフォントサイズに依存するため、input側(15px)と揃えて誤差が出ないようにする */
   font-size: 15px;
 }
@@ -926,6 +926,14 @@ table.admin-table {
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+/* 紹介文は<br />で指定した位置以外では改行させない。幅が足りない場合は
+   Register.tsx(useFitRowScale)が測って文字を縮小することで対応する */
+.register-intro-text {
+  --intro-scale: 1;
+  font-size: calc(15px * var(--intro-scale, 1));
+  white-space: nowrap;
 }
 
 .register-hero-photo {

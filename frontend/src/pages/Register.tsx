@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { PasswordField } from "../components/PasswordField";
 import { useAuth } from "../context/AuthContext";
+import { useFitRowScale } from "../hooks/useFitRowScale";
 import { ApiError } from "../api/client";
 import { resyncAfterPaste } from "../utils/pasteSync";
 import registerHero from "../assets/register-hero.jpg";
@@ -15,6 +16,10 @@ export function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // 紹介文が<br />の位置以外で折り返さないよう、実際の幅を測って必要な分だけ
+  // 文字を縮小する(PC・スマホどちらでも指定した改行位置だけで改行させたいため)
+  const introRef = useFitRowScale<HTMLParagraphElement>("--intro-scale", 1, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -47,7 +52,7 @@ export function Register() {
           <Link to="/" style={{ textDecoration: "none" }}>
             <span className="brand-text" style={{ fontSize: 40 }}>未来リスト</span>
           </Link>
-          <p className="muted-text" style={{ marginTop: 16, lineHeight: 1.6 }}>
+          <p ref={introRef} className="muted-text register-intro-text" style={{ marginTop: 16, lineHeight: 1.6 }}>
             未来リストは未来にある『やってみたい』
             <br />
             を集めるリストです。
@@ -68,7 +73,7 @@ export function Register() {
           <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 20, textAlign: "center", color: "var(--accent-ink)" }}>
             新規登録
           </h1>
-          <form onSubmit={handleSubmit} className="form register-form" style={{ alignItems: "center", textAlign: "center" }}>
+          <form onSubmit={handleSubmit} className="form auth-form" style={{ alignItems: "center", textAlign: "center" }}>
             <label className="field">
               ユーザー名
               <input

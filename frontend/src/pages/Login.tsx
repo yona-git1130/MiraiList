@@ -43,7 +43,7 @@ export function Login() {
         <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 20, textAlign: "center", color: "var(--accent-ink)" }}>
           ログイン
         </h1>
-        <form onSubmit={handleSubmit} className="form" style={{ alignItems: "center", textAlign: "center" }}>
+        <form onSubmit={handleSubmit} className="form auth-form" style={{ alignItems: "center", textAlign: "center" }}>
           <label className="field">
             メールアドレス
             <input
