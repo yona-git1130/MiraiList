@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Header } from "../components/Header";
 import { createPostRequest, updatePostRequest, getPostRequest } from "../api/posts";
 import { listTagsRequest } from "../api/tags";
@@ -19,6 +19,8 @@ export function PostForm() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
+  // ONにすると、みんなのリストには出さず自分のマイリストにだけ表示する
+  const [isPrivate, setIsPrivate] = useState(false);
   const [loading, setLoading] = useState(isEdit); // 編集時は既存データを読み込むまで待つ
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,15 +30,27 @@ export function PostForm() {
   }, []);
 
   useEffect(() => {
-    if (!isEdit || !id) return;
-    getPostRequest(Number(id))
-      .then(({ post }) => {
-        setTitle(post.title);
-        setBody(post.body);
-        setSelectedTagId(post.tags[0]?.id ?? null);
-      })
-      .catch(() => setError("投稿の取得に失敗しました"))
-      .finally(() => setLoading(false));
+    if (isEdit && id) {
+      setLoading(true);
+      getPostRequest(Number(id))
+        .then(({ post }) => {
+          setTitle(post.title);
+          setBody(post.body);
+          setSelectedTagId(post.tags[0]?.id ?? null);
+          setIsPrivate(post.is_private);
+        })
+        .catch(() => setError("投稿の取得に失敗しました"))
+        .finally(() => setLoading(false));
+    } else {
+      // 編集画面から「リストに追加」画面に遷移した場合など、前の投稿の内容が
+      // 残ってしまわないよう、作成モードに切り替わったタイミングで入力欄をリセットする
+      setTitle("");
+      setBody("");
+      setSelectedTagId(null);
+      setIsPrivate(false);
+      setError(null);
+      setLoading(false);
+    }
   }, [isEdit, id]);
 
   async function handleSubmit(e: FormEvent) {
@@ -49,7 +63,12 @@ export function PostForm() {
     }
     setSubmitting(true);
     try {
-      const params = { title, body, tagIds: selectedTagId !== null ? [selectedTagId] : [] };
+      const params = {
+        title,
+        body,
+        tagIds: selectedTagId !== null ? [selectedTagId] : [],
+        isPrivate,
+      };
       if (isEdit) {
         await updatePostRequest(Number(id), params);
       } else {
@@ -78,8 +97,13 @@ export function PostForm() {
     <>
       <Header />
       <main className="page">
-        <h1 style={{ fontSize: 24, marginBottom: 20, color: "var(--accent-ink)" }}>
-          {isEdit ? "投稿を編集" : "リストに追加"}
+        {isEdit && (
+          <Link to="/" style={{ display: "inline-block", marginBottom: 12 }}>
+            ← マイリストに戻る
+          </Link>
+        )}
+        <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 20, color: "var(--accent-ink)" }}>
+          {isEdit ? "リストを編集" : "リストに追加"}
         </h1>
         <form onSubmit={handleSubmit} className="form">
           <label className="field">
@@ -116,6 +140,23 @@ export function PostForm() {
               ))}
             </div>
           </fieldset>
+          {/* マイリストにだけ表示のON/OFFは「リストに追加」時のみ選べる。
+              一度追加した投稿は、この画面(編集)からは変更できない */}
+          {!isEdit && (
+            <div className="privacy-toggle-row">
+              <button
+                type="button"
+                onClick={() => setIsPrivate((v) => !v)}
+                className={`filter-btn${isPrivate ? " active" : ""}`}
+                aria-pressed={isPrivate}
+              >
+                マイリストにだけ表示
+              </button>
+              <p className="muted-text" style={{ fontSize: 12, margin: 0 }}>
+                みんなのリストには表示されず、マイリストにだけ表示されます
+              </p>
+            </div>
+          )}
           {error && <p className="error-text">{error}</p>}
           <button
             type="submit"

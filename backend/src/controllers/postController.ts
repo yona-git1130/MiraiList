@@ -35,7 +35,7 @@ export async function getPost(req: Request, res: Response) {
 }
 
 export async function createPost(req: Request, res: Response) {
-  const { title, body, tagIds } = req.body ?? {};
+  const { title, body, tagIds, isPrivate } = req.body ?? {};
 
   // コメント(body)は任意項目。タイトルとタグは必須
   if (!title) {
@@ -58,6 +58,7 @@ export async function createPost(req: Request, res: Response) {
     title,
     body: body ?? "",
     tagIds: validTagIds,
+    isPrivate: isPrivate === true,
   });
   const post = await postRepository.findPostById(postId);
   res.status(201).json({ post });
@@ -74,7 +75,7 @@ export async function updatePost(req: Request, res: Response) {
     return res.status(403).json({ error: "この投稿を編集する権限がありません" });
   }
 
-  const { title, body, tagIds } = req.body ?? {};
+  const { title, body, tagIds, isPrivate } = req.body ?? {};
   // コメント(body)は任意項目。タイトルとタグは必須
   if (!title) {
     return res.status(400).json({ error: "title は必須です" });
@@ -91,7 +92,12 @@ export async function updatePost(req: Request, res: Response) {
     return res.status(400).json({ error: "タグを選択してください" });
   }
 
-  await postRepository.updatePost(id, { title, body: body ?? "", tagIds: validTagIds });
+  await postRepository.updatePost(id, {
+    title,
+    body: body ?? "",
+    tagIds: validTagIds,
+    isPrivate: isPrivate === true,
+  });
   const updated = await postRepository.findPostById(id);
   res.json({ post: updated });
 }
@@ -118,6 +124,34 @@ export async function setAchieved(req: Request, res: Response) {
   }
 
   await postRepository.setAchieved(id, achieved);
+  const updated = await postRepository.findPostById(id);
+  res.json({ post: updated });
+}
+
+// 達成直後のモーダルで「保存」を押したときに呼ばれる。感想は空文字も許容する
+// (テキストエリアを空のまま保存された場合など)。
+export async function setAchievementComment(req: Request, res: Response) {
+  const id = Number(req.params.id);
+  const { comment } = req.body ?? {};
+
+  if (typeof comment !== "string") {
+    return res.status(400).json({ error: "comment は文字列で指定してください" });
+  }
+
+  const post = await postRepository.findPostById(id);
+  if (!post) {
+    return res.status(404).json({ error: "投稿が見つかりません" });
+  }
+  // 感想を書けるのも投稿者本人だけ
+  if (post.author.id !== req.user!.id) {
+    return res.status(403).json({ error: "この投稿を操作する権限がありません" });
+  }
+  // 達成済みでない投稿に感想だけ付けられてしまうのを防ぐ
+  if (!post.is_achieved) {
+    return res.status(400).json({ error: "達成済みの投稿にのみ感想を追加できます" });
+  }
+
+  await postRepository.setAchievementComment(id, comment);
   const updated = await postRepository.findPostById(id);
   res.json({ post: updated });
 }

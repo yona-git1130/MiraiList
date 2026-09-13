@@ -6,6 +6,7 @@ import {
   updatePost,
   deletePost,
   setAchieved,
+  setAchievementComment,
 } from "../controllers/postController";
 import { getRanking } from "../controllers/reactionController";
 import { requireAuth, requireActive } from "../middleware/authMiddleware";
@@ -24,6 +25,7 @@ postRouter.post("/", requireAuth, requireActive, createPost);
 postRouter.put("/:id", requireAuth, requireActive, updatePost);
 postRouter.delete("/:id", requireAuth, requireActive, deletePost);
 postRouter.patch("/:id/achieved", requireAuth, requireActive, setAchieved);
+postRouter.patch("/:id/achievement-comment", requireAuth, requireActive, setAchievementComment);
 
 postRouter.use("/:id/comments", postCommentsRouter);
 postRouter.use("/:id/reactions", postReactionsRouter);

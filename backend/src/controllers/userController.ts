@@ -6,6 +6,7 @@ import {
   findUserById,
   listUsers,
   setUserStatus,
+  setUserRole,
   updatePassword,
   updateProfile,
 } from "../repositories/userRepository";
@@ -132,4 +133,20 @@ export async function adminSetUserPassword(req: Request, res: Response) {
   const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
   await updatePassword(id, passwordHash);
   res.status(204).send();
+}
+
+// 管理者専用: 任意のユーザーを管理者に昇格させる(降格は事故防止のためこの画面からは行わない)
+export async function adminSetUserRole(req: Request, res: Response) {
+  const id = Number(req.params.id);
+
+  const target = await findUserById(id);
+  if (!target) {
+    return res.status(404).json({ error: "ユーザーが見つかりません" });
+  }
+  if (target.role === "admin") {
+    return res.status(400).json({ error: "すでに管理者です" });
+  }
+
+  const updated = await setUserRole(id, "admin");
+  res.json({ user: toPublicUser(updated!) });
 }

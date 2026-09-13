@@ -52,7 +52,7 @@ export function PostList() {
     <>
       <Header />
       <main className="page">
-        <h1 style={{ fontSize: 24, marginBottom: 20, color: "var(--accent-ink)" }}>私のリスト</h1>
+        <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 20, color: "var(--accent-ink)" }}>マイリスト</h1>
         <div className="filter-row">
           <button
             onClick={selectAll}
@@ -89,7 +89,11 @@ export function PostList() {
           </p>
         )}
         {posts.map((post) => (
-          <PostCard key={post.id} post={post} />
+          <PostCard
+            key={post.id}
+            post={post}
+            onDeleted={() => setPosts((prev) => prev.filter((p) => p.id !== post.id))}
+          />
         ))}
       </main>
     </>

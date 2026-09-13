@@ -4,19 +4,27 @@
    色を使う側(下の各クラス)は var(--text) のように変数名だけを参照する。
    ========================================================================== */
 :root {
-  /* ロゴの青紫グラデーションに合わせた、淡いラベンダー系の背景色 */
-  --bg: #f1f0ff;
-  --panel: #ffffff;
-  --panel-hover: #faf9fd;
-  --text: #211f2e;
-  --muted: #6b6b7a;
-  --border: #e2e0ea;
-  /* ロゴ・背景と同じ青紫系。ログイン/更新ボタン、タグやリアクションの選択色に使われる */
-  --accent: #a99bff;
-  --accent-hover: #8f7eff;
-  --accent-ink: #5d4fe0;
-  --accent-soft: rgba(169, 155, 255, 0.35);
-  --accent-contrast: #211347;
+  /* 新規登録画面と同じ、白背景+グレーを基調としたシンプルな配色 */
+  --bg: #ffffff;
+  /* カードの色 */
+  --panel: #f9f5f4;
+  --panel-hover: #f1e9e6;
+  --text: #333333;
+  --muted: #767676;
+  --border: #e7dfdc;
+  /* ボタンやリンクなどのベースカラー。あえて紫ではなくグレーにして、
+     色は「選択中」を示すselect系だけに使う */
+  --accent: #4a4a4a;
+  --accent-hover: #333333;
+  --accent-ink: #4a4a4a;
+  --accent-soft: rgba(74, 74, 74, 0.08);
+  --accent-contrast: #ffffff;
+  /* タグや絞り込みを選択しているときだけに使うアクセントカラー */
+  --select: #f08b71;
+  --select-hover: #e17a5c;
+  --select-soft: rgba(240, 139, 113, 0.25);
+  --select-ink: #c1552f;
+  --select-contrast: #3a2015;
   --danger: #c53939;
   --danger-soft: rgba(197, 57, 57, 0.1);
   --success: #237a4b;
@@ -32,7 +40,8 @@
   /* light のみ固定。auto にすると端末側がダークモードのとき、ブラウザ標準UI
      (スクロールバーやフォームの既定色など)が暗色に切り替わってしまうため。 */
   color-scheme: light;
-  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Segoe UI", sans-serif;
+  /* アプリ全体で共通のフォント。丸みのあるやさしい雰囲気にする */
+  font-family: "Kosugi Maru", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
 }
 
 /* ==========================================================================
@@ -45,15 +54,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-  /* ログイン/新規登録画面と同じ、紫のグラデーション+きらめきの背景をアプリ全体(ヘッダーの下)に敷く。
-     ヘッダー自体は .site-header 側で白背景を指定しているので、その上に重なって隠れる */
-  background:
-    radial-gradient(ellipse 900px 620px at 50% -8%, rgba(176, 107, 255, 0.45), transparent 68%),
-    radial-gradient(circle, rgba(255, 255, 255, 0.95) 1px, transparent 1.6px),
-    radial-gradient(circle, rgba(255, 255, 255, 0.7) 1px, transparent 1.6px),
-    linear-gradient(180deg, #ece6ff 0%, var(--bg) 58%);
-  background-size: auto, 64px 64px, 96px 96px, auto;
-  background-position: 0 0, 0 0, 30px 40px, 0 0;
+  /* 新規登録画面と同じ、白一色のシンプルな背景をアプリ全体に敷く */
+  background: var(--bg);
   color: var(--text);
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
@@ -110,13 +112,16 @@ button:focus-visible {
    ヘッダー
    ========================================================================== */
 .site-header {
+  --header-scale: 1;
   position: relative; /* 背景の星(position: fixed)より確実に前面に出すための重ね順の基準 */
   z-index: 1;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  /* スマホ幅でも折り返さず、PCと同じ1行の配置を保つ。文字サイズ側をJS(Header.tsx)で
+     測って縮小することで、狭い画面でもロゴ+navが1行に収まるようにしている */
+  flex-wrap: nowrap;
   padding: 14px 20px;
   /* 単色にせず透明にすることで、body側の背景(ログイン画面と同じグラデーション)が
      ヘッダーにもそのまま続いて見えるようにする。境界線もなくして継ぎ目をなくす */
@@ -133,40 +138,36 @@ button:focus-visible {
   white-space: nowrap;
 }
 
-/* ロゴ文字「未来リスト」: 丸っこいポップなフォント + 青みの紫のグラデーションで、
-   近未来感のある可愛らしい雰囲気にする。アプリ全体のアクセント色(緑)とはあえて分けている。 */
+/* ロゴ文字「未来リスト」。フォントはbodyと共通(アプリ全体で統一)、太字で少し大きくする */
 .brand-text {
-  font-family: "Mochiy Pop One", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
+  font-weight: 700;
   font-size: 30px;
   letter-spacing: 0.03em;
-  /* グラデーション未対応ブラウザ向けのフォールバック色 */
-  color: #6c63ff;
-  background: linear-gradient(135deg, #5b7fff 0%, #9b6bff 60%, #b06bff 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 14px rgba(120, 100, 255, 0.35);
+  color: var(--accent-ink);
 }
 
-/* ヘッダー(ログイン後の画面)のロゴだけは、ぼかし(text-shadow)を外してすっきり見せる */
+/* ヘッダー内のロゴだけは、--header-scale(Header.tsxが幅に応じて計算)で縮小できるようにする */
 .site-header .brand-text {
-  text-shadow: none;
+  font-size: calc(30px * var(--header-scale, 1));
 }
 
 .site-header nav {
   display: flex;
-  gap: 16px;
+  gap: calc(16px * var(--header-scale, 1));
   align-items: center;
-  flex-wrap: wrap;
-  font-size: 14px;
+  flex-wrap: nowrap;
+  font-size: calc(14px * var(--header-scale, 1));
+  white-space: nowrap;
 }
 
-.site-header nav a {
+/* :not(.btn) にして、ボタン風リンク(ログイン・新規登録など)の色はここで
+   上書きせず、.btn/.btn-primary側の指定(白文字など)をそのまま活かす */
+.site-header nav a:not(.btn) {
   text-decoration: none;
   color: var(--accent-ink);
 }
 
-.site-header nav a:hover {
+.site-header nav a:not(.btn):hover {
   color: var(--accent-hover);
 }
 
@@ -234,6 +235,42 @@ button:focus-visible {
   background: var(--panel-hover);
 }
 
+.user-menu-item.danger {
+  color: var(--danger);
+}
+
+/* ユーザー管理画面、各行の操作(ハンバーガー)メニュー。UserMenuと同じ見た目・挙動 */
+.row-menu-trigger {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--accent-ink);
+  font-size: 15px;
+}
+
+.row-menu-trigger:hover {
+  background: var(--panel-hover);
+}
+
+.row-menu-dropdown {
+  /* 位置(position/top/right)はJS側でportal表示のためにinline styleで指定する */
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  z-index: 20;
+}
+
 /* ==========================================================================
    ボタン
    ========================================================================== */
@@ -257,6 +294,23 @@ button:focus-visible {
 .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* ボタン内に表示する、処理中を示す小さな回転アイコン */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spinner-rotate 0.7s linear infinite;
+}
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .btn-primary {
@@ -376,6 +430,14 @@ fieldset.tag-fieldset legend {
   font-size: 13px;
 }
 
+/* 「マイリストにだけ表示」トグルとその注意文 */
+.privacy-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 /* ==========================================================================
    カード(投稿一覧・ランキング)
    ========================================================================== */
@@ -430,10 +492,16 @@ fieldset.tag-fieldset legend {
 }
 
 .achieve-btn.achieved {
-  background: var(--celebrate-btn);
-  border-color: var(--celebrate-btn);
+  background: transparent;
+  border-color: transparent;
   color: var(--celebrate-contrast);
   font-weight: 700;
+}
+
+/* 達成済みのボタンは常にdisabledだが、他の無効ボタンと違って薄く見せたくない。
+   「達成した感想」の文字と全く同じ色に見えるよう、不透明度を戻す */
+.achieve-btn.achieved:disabled {
+  opacity: 1;
 }
 
 /* カード内の「クリックすると投稿詳細に飛ぶ」領域。
@@ -450,6 +518,19 @@ fieldset.tag-fieldset legend {
   color: var(--text);
 }
 
+/* タグとタイトルを同じ行に並べる(マイリスト・みんなのリスト共通) */
+.tag-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.tag-title-row .card-title {
+  margin: 0;
+}
+
 /* 投稿詳細画面: 本文全体を一覧のカードと同じ白背景+枠線で囲む */
 .post-detail-card {
   padding: 24px;
@@ -462,12 +543,50 @@ fieldset.tag-fieldset legend {
 .card-excerpt {
   margin: 0 0 10px;
   color: var(--muted);
+  white-space: pre-wrap;
 }
 
 .card-meta {
   margin: 0;
   font-size: 12px;
   color: var(--muted);
+}
+
+/* 達成直後のモーダルで入力された感想。マイリスト・みんなのリスト共通 */
+.achievement-comment {
+  margin: 8px 0 10px;
+  padding: 8px 10px;
+  background: var(--celebrate-card-soft);
+  border-radius: 8px;
+}
+
+.achievement-comment-label {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--celebrate-contrast);
+}
+
+.achievement-comment-text {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* マイリストのカード内では、投稿タイトル(18px)・コメント本文(16px)と同じ大きさに揃える */
+.card .achievement-comment-label {
+  font-size: 18px;
+}
+
+.card .achievement-comment-text {
+  font-size: 16px;
+}
+
+/* みんなのリストでは、投稿タイトル(16px)・本文(13px)と同じ大きさに揃える */
+.rank-item .achievement-comment-label {
+  font-size: 16px;
+}
+
+.rank-item .achievement-comment-text {
+  font-size: 13px;
 }
 
 /* ==========================================================================
@@ -498,6 +617,26 @@ fieldset.tag-fieldset legend {
   margin-bottom: 24px;
 }
 
+/* みんなのリストのタグ絞り込みは、投稿カードと同じ幅の枠の中で折り返さず横一列に並べる。
+   container-type: inline-sizeでこの枠自体の幅(=カードの幅)を基準にし、
+   文字サイズ・余白をcqw(コンテナ幅に対する割合)で決めることで、
+   画面幅が変わっても常にこの枠の中(横スクロールなし)に収まるようにする */
+.filter-row-nowrap {
+  --tag-scale: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: calc(8px * var(--tag-scale));
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.filter-row-nowrap .filter-btn {
+  flex-shrink: 0;
+  padding: calc(7px * var(--tag-scale)) calc(14px * var(--tag-scale));
+  font-size: calc(14px * var(--tag-scale));
+  white-space: nowrap;
+}
+
 .filter-btn {
   border: 1px solid var(--border);
   background: var(--panel);
@@ -508,9 +647,9 @@ fieldset.tag-fieldset legend {
 }
 
 .filter-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
+  background: var(--select);
+  border-color: var(--select);
+  color: var(--select-contrast);
   font-weight: 700;
 }
 
@@ -544,10 +683,10 @@ fieldset.tag-fieldset legend {
 }
 
 .reaction-btn.active {
-  border-color: var(--accent-ink);
+  border-color: var(--select-ink);
   border-width: 2px;
-  background: var(--accent-soft);
-  color: var(--accent-ink);
+  background: var(--select-soft);
+  color: var(--select-ink);
   font-weight: 700;
 }
 
@@ -611,6 +750,7 @@ fieldset.tag-fieldset legend {
   margin: 4px 0 0;
   font-size: 13px;
   color: var(--muted);
+  white-space: pre-wrap;
 }
 
 /* ==========================================================================
@@ -690,14 +830,6 @@ table.admin-table {
   .card {
     padding: 14px;
   }
-
-  /* スマホ幅では、ロゴの下に折り返したnavを幅いっぱいまで広げ、
-     リンク3つ(リストに追加・私のリスト・みんなのリスト)とユーザーアイコンを左右均等に配置する。
-     アイコンは並び順そのまま(一番右)にする */
-  .site-header nav {
-    width: 100%;
-    justify-content: space-between;
-  }
 }
 
 /* 「はい/いいえ」確認モーダル(達成ボタンなど、取り消せない操作の確認用) */
@@ -738,29 +870,65 @@ table.admin-table {
   min-height: 100vh;
 }
 
-/* ロゴの上に置く、三日月と星をあしらった円形の飾り */
-.auth-ring {
+/* 画面を開いた直後は、写真・ロゴ・紹介文だけで画面の高さいっぱいに表示し、
+   「新規登録」より下はスクロールしないと見えないようにする */
+.register-hero-top {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.register-hero-photo {
   display: block;
-  margin: 0 auto;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 3;
+  background-size: cover;
+  background-position: center;
+  margin: 0 auto 20px;
+  border-radius: 0;
+  box-shadow: var(--shadow);
 }
 
-.auth-ring circle {
-  /* 反時計回りにゆっくり回転させる(負の角度=反時計回り) */
-  animation: auth-ring-spin 30s linear infinite;
-  transform-origin: 50% 50%;
-}
-
-@keyframes auth-ring-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(-360deg);
-  }
+/* 各画面の見出しも、ロゴ「未来リスト」と同じ丸っこいフォントに統一する */
+.page-heading {
+  font-weight: 700;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* モーダル右上の閉じる(×)ボタン */
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.modal-close:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.modal-textarea {
+  width: 100%;
+  resize: vertical;
+  margin-bottom: 16px;
+  font-family: inherit;
 }

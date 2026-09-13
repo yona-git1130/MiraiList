@@ -76,3 +76,12 @@ export async function setUserStatus(
   );
   return result.rows[0] ?? null;
 }
+
+// ユーザー管理画面から、任意のユーザーを管理者に昇格させる
+export async function setUserRole(id: number, role: "user" | "admin"): Promise<UserRow | null> {
+  const result = await pool.query<UserRow>(
+    "UPDATE users SET role = $1 WHERE id = $2 RETURNING *",
+    [role, id]
+  );
+  return result.rows[0] ?? null;
+}

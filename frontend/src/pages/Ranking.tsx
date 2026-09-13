@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Header } from "../components/Header";
 import { ReactionBar } from "../components/ReactionBar";
@@ -39,6 +39,47 @@ export function Ranking() {
 
   const selectedTag = tags.find((tag) => tag.id === selectedTagId);
 
+  // タグ絞り込みの行を、常に投稿カードと同じ幅ぴったりに収まる大きさに調整する。
+  // CSSの計算式だけでは画面幅ごとに微妙にずれてしまうため、実際に描画された
+  // 幅を測って倍率を掛け直す方式にしている。
+  const filterRowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const row = filterRowRef.current;
+    if (!row) return;
+
+    function fit() {
+      if (!row) return;
+      // 一旦倍率をリセットして、基準サイズ(等倍)での「そのままの幅」を測る
+      row.style.removeProperty("--tag-scale");
+      const available = row.clientWidth;
+      const natural = row.scrollWidth;
+      if (natural === 0 || available === 0) return;
+
+      // 枠線の太さなど倍率をかけても変わらない部分があるため、一度掛けただけでは
+      // ぴったり合わないことがある。実際に反映された幅を測り直し、ずれた分だけ
+      // 追加で補正することで、確実に収まる倍率に近づける。
+      let scale = available / natural;
+      for (let i = 0; i < 3; i++) {
+        row.style.setProperty("--tag-scale", String(scale));
+        const actual = row.scrollWidth;
+        if (actual <= available || actual === 0) break;
+        scale *= available / actual;
+      }
+      // 最後に少しだけ余裕を持たせ、丸め誤差ではみ出さないようにする
+      row.style.setProperty("--tag-scale", String(scale * 0.995));
+    }
+
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(row);
+    window.addEventListener("resize", fit);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", fit);
+    };
+  }, [tags]);
+
   function selectAll() {
     setSelectedTagId(undefined);
     setAchievedOnly(false);
@@ -67,9 +108,9 @@ export function Ranking() {
     <>
       <Header />
       <main className="page">
-        <h1 style={{ fontSize: 24, marginBottom: 20, color: "var(--accent-ink)" }}>みんなのリスト</h1>
+        <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 20, color: "var(--accent-ink)" }}>みんなのリスト</h1>
 
-        <div className="filter-row">
+        <div className="filter-row filter-row-nowrap" ref={filterRowRef}>
           <button
             onClick={selectAll}
             className={`filter-btn${selectedTagId === undefined && !achievedOnly ? " active" : ""}`}
@@ -118,22 +159,20 @@ export function Ranking() {
                     🎉達成
                   </span>
                 )}
-                {entry.tags.length > 0 && (
-                  <div className="tag-row">
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                  <div className="tag-title-row" style={{ marginBottom: 0 }}>
                     {entry.tags.map((tag) => (
                       <span key={tag.id} className="tag-pill">
                         {tag.icon} {tag.name}
                       </span>
                     ))}
+                    <Link
+                      to={`/posts/${entry.post_id}`}
+                      style={{ fontWeight: 700, textDecoration: "none", color: "inherit" }}
+                    >
+                      {entry.title}
+                    </Link>
                   </div>
-                )}
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                  <Link
-                    to={`/posts/${entry.post_id}`}
-                    style={{ fontWeight: 700, textDecoration: "none", color: "inherit" }}
-                  >
-                    {entry.title}
-                  </Link>
                   {/* 削除ボタンは管理者にだけ表示する */}
                   {user?.role === "admin" && (
                     <button
@@ -146,6 +185,13 @@ export function Ranking() {
                   )}
                 </div>
                 <p className="rank-excerpt">{excerpt(entry.body)}</p>
+                {/* 達成直後のモーダルで入力された感想。書かれている投稿だけ表示する */}
+                {entry.achievement_comment && (
+                  <div className="achievement-comment">
+                    <p className="achievement-comment-label">🎉達成した感想</p>
+                    <p className="achievement-comment-text">{entry.achievement_comment}</p>
+                  </div>
+                )}
                 <p
                   className="card-meta"
                   style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}

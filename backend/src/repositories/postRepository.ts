@@ -17,6 +17,7 @@ const REACTION_COUNTS_FILTER = REACTION_TYPES.map(
 const SELECT_POST_DETAIL = `
   SELECT
     p.id, p.title, p.body, p.created_at, p.updated_at, p.is_achieved, p.deleted_by_admin,
+    p.achievement_comment, p.is_private,
     u.id AS author_id, u.username AS author_username,
     COALESCE(
       json_agg(json_build_object('id', t.id, 'name', t.name, 'icon', t.icon))
@@ -42,6 +43,8 @@ type PostDetailRow = {
   updated_at: Date;
   is_achieved: boolean;
   deleted_by_admin: boolean;
+  achievement_comment: string | null;
+  is_private: boolean;
   author_id: number;
   author_username: string;
   tags: { id: number; name: string; icon: string }[];
@@ -60,6 +63,8 @@ function toPostDetail(row: PostDetailRow): PostDetail {
     reaction_counts: row.reaction_counts,
     is_achieved: row.is_achieved,
     deleted_by_admin: row.deleted_by_admin,
+    achievement_comment: row.achievement_comment,
+    is_private: row.is_private,
   };
 }
 
@@ -117,6 +122,7 @@ export async function createPost(params: {
   title: string;
   body: string;
   tagIds: number[];
+  isPrivate: boolean;
 }): Promise<number> {
   // 「投稿を作る」+「タグを紐付ける」は2つ以上のSQL文だが、片方だけ成功すると
   // データが中途半端な状態になってしまう。BEGIN〜COMMITで1つの塊(トランザクション)にし、
@@ -126,8 +132,8 @@ export async function createPost(params: {
     await client.query("BEGIN");
 
     const postResult = await client.query<{ id: number }>(
-      `INSERT INTO posts (user_id, title, body) VALUES ($1, $2, $3) RETURNING id`,
-      [params.userId, params.title, params.body]
+      `INSERT INTO posts (user_id, title, body, is_private) VALUES ($1, $2, $3, $4) RETURNING id`,
+      [params.userId, params.title, params.body, params.isPrivate]
     );
     const postId = postResult.rows[0].id;
 
@@ -150,15 +156,15 @@ export async function createPost(params: {
 
 export async function updatePost(
   id: number,
-  params: { title: string; body: string; tagIds: number[] }
+  params: { title: string; body: string; tagIds: number[]; isPrivate: boolean }
 ): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
     await client.query(
-      `UPDATE posts SET title = $1, body = $2, updated_at = now() WHERE id = $3`,
-      [params.title, params.body, id]
+      `UPDATE posts SET title = $1, body = $2, is_private = $3, updated_at = now() WHERE id = $4`,
+      [params.title, params.body, params.isPrivate, id]
     );
 
     // タグの更新は「一旦全部消してから、送られてきたタグだけ入れ直す」方式にする。
@@ -182,6 +188,11 @@ export async function updatePost(
 
 export async function setAchieved(id: number, achieved: boolean): Promise<void> {
   await pool.query(`UPDATE posts SET is_achieved = $1 WHERE id = $2`, [achieved, id]);
+}
+
+// 達成直後のモーダルで入力する感想。みんなのリストに表示される
+export async function setAchievementComment(id: number, comment: string): Promise<void> {
+  await pool.query(`UPDATE posts SET achievement_comment = $1 WHERE id = $2`, [comment, id]);
 }
 
 export async function deletePost(id: number): Promise<void> {

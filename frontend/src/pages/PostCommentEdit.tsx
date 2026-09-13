@@ -17,6 +17,7 @@ export function PostCommentEdit() {
   const [title, setTitle] = useState("");
   const [tagIds, setTagIds] = useState<number[]>([]);
   const [body, setBody] = useState("");
+  const [isPrivate, setIsPrivate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,7 @@ export function PostCommentEdit() {
         setTitle(post.title);
         setTagIds(post.tags.map((t) => t.id));
         setBody(post.body);
+        setIsPrivate(post.is_private);
       })
       .catch(() => setError("投稿の取得に失敗しました"))
       .finally(() => setLoading(false));
@@ -39,8 +41,8 @@ export function PostCommentEdit() {
     setError(null);
     setSubmitting(true);
     try {
-      // title, tagIds は取得した値のまま送り、body(コメント)だけを更新する
-      const { post } = await updatePostRequest(Number(id), { title, body, tagIds });
+      // title, tagIds, isPrivate は取得した値のまま送り、body(コメント)だけを更新する
+      const { post } = await updatePostRequest(Number(id), { title, body, tagIds, isPrivate });
       navigate(`/posts/${post.id}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "コメントの保存に失敗しました");
@@ -64,7 +66,7 @@ export function PostCommentEdit() {
     <>
       <Header />
       <main className="page">
-        <h1 style={{ fontSize: 24, marginBottom: 4 }}>コメントを編集</h1>
+        <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 4 }}>コメントを編集</h1>
         <p className="muted-text" style={{ marginBottom: 20 }}>{title}</p>
         <form onSubmit={handleSubmit} className="form">
           <label className="field">

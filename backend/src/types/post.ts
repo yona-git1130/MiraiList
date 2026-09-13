@@ -25,4 +25,8 @@ export type PostDetail = {
   is_achieved: boolean;
   // 管理者が「みんなのリスト」から削除した投稿かどうか(本人のリスト一覧にだけ、その旨を表示する)
   deleted_by_admin: boolean;
+  // 達成した直後にモーダルで入力する感想。未入力ならnull。みんなのリストに表示される
+  achievement_comment: string | null;
+  // 「マイリストにだけ表示」ボタンがONの投稿かどうか。trueの間はみんなのリストに出さない
+  is_private: boolean;
 };

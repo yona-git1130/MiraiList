@@ -13,7 +13,12 @@ export function getPostRequest(id: number) {
   return apiFetch<{ post: Post }>(`/posts/${id}`);
 }
 
-export function createPostRequest(params: { title: string; body: string; tagIds: number[] }) {
+export function createPostRequest(params: {
+  title: string;
+  body: string;
+  tagIds: number[];
+  isPrivate: boolean;
+}) {
   return apiFetch<{ post: Post }>("/posts", {
     method: "POST",
     body: JSON.stringify(params),
@@ -22,7 +27,7 @@ export function createPostRequest(params: { title: string; body: string; tagIds:
 
 export function updatePostRequest(
   id: number,
-  params: { title: string; body: string; tagIds: number[] }
+  params: { title: string; body: string; tagIds: number[]; isPrivate: boolean }
 ) {
   return apiFetch<{ post: Post }>(`/posts/${id}`, {
     method: "PUT",
@@ -38,5 +43,12 @@ export function setPostAchievedRequest(id: number, achieved: boolean) {
   return apiFetch<{ post: Post }>(`/posts/${id}/achieved`, {
     method: "PATCH",
     body: JSON.stringify({ achieved }),
+  });
+}
+
+export function setAchievementCommentRequest(id: number, comment: string) {
+  return apiFetch<{ post: Post }>(`/posts/${id}/achievement-comment`, {
+    method: "PATCH",
+    body: JSON.stringify({ comment }),
   });
 }

@@ -19,6 +19,8 @@ export type RankingEntry = {
   body: string;
   counts: ReactionCounts;
   is_achieved: boolean;
+  // 達成直後のモーダルで入力した感想。未入力ならnull
+  achievement_comment: string | null;
   // リアクションボタンを押せるのは他人の投稿だけなので、本人判定に使う
   author_id: number;
   // みんなのリストで、投稿者名をコメントとリアクションの間に表示するために使う

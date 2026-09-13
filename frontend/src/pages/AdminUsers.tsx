@@ -1,5 +1,6 @@
-import { Fragment, useEffect, useState } from "react";
-import type { FormEvent } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import type { FormEvent, ReactNode } from "react";
 import { Header } from "../components/Header";
 import { PasswordField } from "../components/PasswordField";
 import { useAuth } from "../context/AuthContext";
@@ -8,9 +9,75 @@ import {
   adminDeleteUserRequest,
   adminSetUserStatusRequest,
   adminSetUserPasswordRequest,
+  adminSetUserRoleRequest,
 } from "../api/admin";
 import type { User } from "../types/user";
 import { ApiError } from "../api/client";
+
+// 操作欄のハンバーガーメニュー。外側クリックで閉じる(UserMenuと同じ考え方)。
+// 中身は呼び出し側が children(close) で自由に組み立てる。
+// テーブルが overflow-x: auto で囲まれていてそのままでは吹き出しが枠内で
+// 切れてしまうため、document.body に portal で描画し、画面基準の座標で位置合わせする。
+function RowMenu({ children }: { children: (close: () => void) => ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; right: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  function toggle() {
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setCoords({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+    }
+    setOpen((v) => !v);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (
+        btnRef.current &&
+        !btnRef.current.contains(target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        className="row-menu-trigger"
+        onClick={toggle}
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-label="操作メニュー"
+      >
+        ☰
+      </button>
+      {open &&
+        coords &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="row-menu-dropdown"
+            role="menu"
+            style={{ position: "fixed", top: coords.top, right: coords.right }}
+          >
+            {children(() => setOpen(false))}
+          </div>,
+          document.body
+        )}
+    </>
+  );
+}
 
 export function AdminUsers() {
   const { user: currentUser } = useAuth();
@@ -65,7 +132,7 @@ export function AdminUsers() {
 
   async function handleToggleStatus(target: User) {
     const nextStatus = target.status === "active" ? "suspended" : "active";
-    const label = nextStatus === "suspended" ? "停止" : "停止解除";
+    const label = nextStatus === "suspended" ? "停止" : "有効化";
     if (!window.confirm(`${target.username} さんを${label}しますか？`)) return;
     try {
       await adminSetUserStatusRequest(target.id, nextStatus);
@@ -85,11 +152,21 @@ export function AdminUsers() {
     }
   }
 
+  async function handlePromote(target: User) {
+    if (!window.confirm(`${target.username} さんを管理者に変更しますか？`)) return;
+    try {
+      await adminSetUserRoleRequest(target.id);
+      load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "操作に失敗しました");
+    }
+  }
+
   return (
     <>
       <Header />
       <main className="page wide">
-        <h1 style={{ fontSize: 24, marginBottom: 20, color: "var(--accent-ink)" }}>ユーザー管理</h1>
+        <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 20, color: "var(--accent-ink)" }}>ユーザー管理</h1>
 
         {loading && <p className="muted-text">読み込み中...</p>}
         {error && <p className="error-text">{error}</p>}
@@ -109,8 +186,10 @@ export function AdminUsers() {
               <tbody>
                 {users.map((u) => {
                   const isSelf = u.id === currentUser?.id;
-                  // パスワード変更は「一般ユーザーのみ」対象(管理者同士のパスワードは変更できない)
-                  const canChangePassword = !isSelf && u.role !== "admin";
+                  const isSuspended = u.status === "suspended";
+                  // パスワードリセット・管理者への変更は「一般ユーザーのみ」対象
+                  // (管理者同士のパスワードや権限はこの画面からは変更できない)
+                  const isGeneralUser = u.role !== "admin";
                   return (
                     <Fragment key={u.id}>
                       <tr>
@@ -118,8 +197,8 @@ export function AdminUsers() {
                         <td>{u.email}</td>
                         <td>{u.role === "admin" ? "管理者" : "一般"}</td>
                         <td>
-                          <span className={`status-pill${u.status === "suspended" ? " suspended" : ""}`}>
-                            {u.status === "suspended" ? "停止中" : "有効"}
+                          <span className={`status-pill${isSuspended ? " suspended" : ""}`}>
+                            {isSuspended ? "停止中" : "有効"}
                           </span>
                         </td>
                         <td>
@@ -128,24 +207,71 @@ export function AdminUsers() {
                               (自分)
                             </span>
                           ) : (
-                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                              <button onClick={() => handleToggleStatus(u)} className="btn-text">
-                                {u.status === "suspended" ? "停止解除" : "停止"}
-                              </button>
-                              {canChangePassword && (
-                                <button
-                                  onClick={() =>
-                                    passwordEditId === u.id ? closePasswordEdit() : openPasswordEdit(u.id)
-                                  }
-                                  className="btn-text"
-                                >
-                                  パスワード変更
-                                </button>
-                              )}
-                              <button onClick={() => handleDelete(u)} className="btn-text danger">
-                                削除
-                              </button>
-                            </div>
+                            <RowMenu>
+                              {(close) =>
+                                isSuspended ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="user-menu-item"
+                                      onClick={() => {
+                                        close();
+                                        handleToggleStatus(u);
+                                      }}
+                                    >
+                                      有効
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="user-menu-item danger"
+                                      onClick={() => {
+                                        close();
+                                        handleDelete(u);
+                                      }}
+                                    >
+                                      削除
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    {isGeneralUser && (
+                                      <button
+                                        type="button"
+                                        className="user-menu-item"
+                                        onClick={() => {
+                                          close();
+                                          openPasswordEdit(u.id);
+                                        }}
+                                      >
+                                        PWリセット
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      className="user-menu-item"
+                                      onClick={() => {
+                                        close();
+                                        handleToggleStatus(u);
+                                      }}
+                                    >
+                                      停止
+                                    </button>
+                                    {isGeneralUser && (
+                                      <button
+                                        type="button"
+                                        className="user-menu-item"
+                                        onClick={() => {
+                                          close();
+                                          handlePromote(u);
+                                        }}
+                                      >
+                                        管理者に変更
+                                      </button>
+                                    )}
+                                  </>
+                                )
+                              }
+                            </RowMenu>
                           )}
                         </td>
                       </tr>

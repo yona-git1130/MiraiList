@@ -6,6 +6,7 @@ import {
   adminDeleteUser,
   adminSetUserStatus,
   adminSetUserPassword,
+  adminSetUserRole,
 } from "../controllers/userController";
 import { requireAuth, requireAdmin } from "../middleware/authMiddleware";
 
@@ -19,3 +20,4 @@ userRouter.get("/", requireAuth, requireAdmin, adminListUsers);
 userRouter.delete("/:id", requireAuth, requireAdmin, adminDeleteUser);
 userRouter.patch("/:id/suspend", requireAuth, requireAdmin, adminSetUserStatus);
 userRouter.patch("/:id/password", requireAuth, requireAdmin, adminSetUserPassword);
+userRouter.patch("/:id/role", requireAuth, requireAdmin, adminSetUserRole);

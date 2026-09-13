@@ -32,6 +32,8 @@ CREATE TABLE posts (
   body TEXT NOT NULL,
   is_achieved BOOLEAN NOT NULL DEFAULT false,
   deleted_by_admin BOOLEAN NOT NULL DEFAULT false,
+  achievement_comment TEXT,
+  is_private BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

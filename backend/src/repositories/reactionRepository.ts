@@ -41,8 +41,8 @@ export async function getRanking(
     (type) => `'${type}', COUNT(*) FILTER (WHERE r.reaction_type = '${type}')`
   ).join(", ");
 
-  // 管理者に削除された投稿は、みんなのリストには常に出さない
-  const conditions: string[] = ["p.deleted_by_admin = false"];
+  // 管理者に削除された投稿、および「マイリストにだけ表示」の投稿は、みんなのリストには常に出さない
+  const conditions: string[] = ["p.deleted_by_admin = false", "p.is_private = false"];
   const values: unknown[] = [];
 
   if (tagId !== undefined) {
@@ -67,13 +67,14 @@ export async function getRanking(
     title: string;
     body: string;
     is_achieved: boolean;
+    achievement_comment: string | null;
     author_id: number;
     author_username: string;
     tags: { id: number; name: string; icon: string }[];
     counts: ReactionCounts;
   }>(
     `SELECT
-       p.id AS post_id, p.title, p.body, p.is_achieved, p.user_id AS author_id,
+       p.id AS post_id, p.title, p.body, p.is_achieved, p.achievement_comment, p.user_id AS author_id,
        u.username AS author_username,
        COALESCE(
          json_agg(json_build_object('id', t.id, 'name', t.name, 'icon', t.icon))
@@ -101,6 +102,7 @@ export async function getRanking(
     title: string;
     body: string;
     is_achieved: boolean;
+    achievement_comment: string | null;
     author_id: number;
     author_username: string;
     tags: { id: number; name: string; icon: string }[];
@@ -113,6 +115,7 @@ export async function getRanking(
     body: row.body,
     counts: row.counts,
     is_achieved: row.is_achieved,
+    achievement_comment: row.achievement_comment,
     author_id: row.author_id,
     author_username: row.author_username,
     tags: row.tags,

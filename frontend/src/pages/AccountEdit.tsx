@@ -43,7 +43,7 @@ export function AccountEdit() {
     <>
       <Header />
       <main className="page" style={{ maxWidth: 420 }}>
-        <h1 style={{ fontSize: 24, marginBottom: 20, color: "var(--accent-ink)" }}>アカウントを編集</h1>
+        <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 20, color: "var(--accent-ink)" }}>アカウントを編集</h1>
         <form onSubmit={handleSubmit} className="form">
           <label className="field">
             ユーザー名

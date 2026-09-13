@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { PasswordField } from "../components/PasswordField";
-import { Star } from "../components/Star";
 import { useAuth } from "../context/AuthContext";
 import { resyncAfterPaste } from "../utils/pasteSync";
 
@@ -34,48 +33,6 @@ export function Login() {
 
   return (
     <div className="auth-hero">
-      {/* 新規登録画面と同じ背景・星の飾り。ただし円(月)は表示しない。
-          角度は星ごとに10度ずつずらしている */}
-      <Star
-        size={20}
-        color="var(--accent)"
-        style={{ position: "absolute", left: "4%", top: "10%", transform: "rotate(0deg)", zIndex: -1, pointerEvents: "none" }}
-      />
-      <Star
-        size={13}
-        color="var(--accent-hover)"
-        style={{ position: "absolute", left: "18%", top: "6%", transform: "rotate(10deg)", zIndex: -1, pointerEvents: "none" }}
-      />
-      <Star
-        size={22}
-        color="var(--accent)"
-        style={{ position: "absolute", left: "28%", top: "18%", transform: "rotate(20deg)", zIndex: -1, pointerEvents: "none" }}
-      />
-      <Star
-        size={16}
-        color="var(--accent-ink)"
-        style={{ position: "absolute", left: "14%", top: "28%", transform: "rotate(30deg)", zIndex: -1, pointerEvents: "none" }}
-      />
-      <Star
-        size={15}
-        color="var(--accent-hover)"
-        style={{ position: "absolute", right: "5%", top: "20%", transform: "rotate(40deg)", zIndex: -1, pointerEvents: "none" }}
-      />
-      <Star
-        size={18}
-        color="var(--accent)"
-        style={{ position: "absolute", right: "17%", top: "9%", transform: "rotate(50deg)", zIndex: -1, pointerEvents: "none" }}
-      />
-      <Star
-        size={22}
-        color="var(--accent-hover)"
-        style={{ position: "absolute", right: "27%", top: "23%", transform: "rotate(60deg)", zIndex: -1, pointerEvents: "none" }}
-      />
-      <Star
-        size={11}
-        color="var(--accent)"
-        style={{ position: "absolute", right: "13%", top: "30%", transform: "rotate(70deg)", zIndex: -1, pointerEvents: "none" }}
-      />
       <main className="page" style={{ maxWidth: 420 }}>
         {/* ヘッダーは表示せず、新規登録画面と同様にロゴを中央に配置した専用のレイアウトにする */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
@@ -83,7 +40,7 @@ export function Login() {
             <span className="brand-text" style={{ fontSize: 40 }}>未来リスト</span>
           </Link>
         </div>
-        <h1 style={{ fontSize: 24, marginBottom: 20, textAlign: "center", color: "var(--accent-ink)" }}>
+        <h1 className="page-heading" style={{ fontSize: 24, marginBottom: 20, textAlign: "center", color: "var(--accent-ink)" }}>
           ログイン
         </h1>
         <form onSubmit={handleSubmit} className="form" style={{ alignItems: "center", textAlign: "center" }}>
@@ -112,6 +69,7 @@ export function Login() {
             disabled={submitting}
             style={{ alignSelf: "center" }}
           >
+            {submitting && <span className="spinner" aria-hidden="true" />}
             {submitting ? "ログイン中..." : "ログイン"}
           </button>
         </form>

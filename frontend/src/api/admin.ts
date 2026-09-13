@@ -22,3 +22,9 @@ export function adminSetUserPasswordRequest(id: number, newPassword: string) {
     body: JSON.stringify({ newPassword }),
   });
 }
+
+export function adminSetUserRoleRequest(id: number) {
+  return apiFetch<{ user: User }>(`/users/${id}/role`, {
+    method: "PATCH",
+  });
+}
