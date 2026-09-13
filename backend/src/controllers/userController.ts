@@ -14,6 +14,10 @@ import { toPublicUser } from "../types/user";
 
 const SALT_ROUNDS = 10;
 
+/**
+ * ログイン中の自分自身の情報を取得するAPI(GET /api/users/me、要ログイン)。
+ * @returns 200: 自分のユーザー情報(password_hashは含まない) / 404: トークンのユーザーが既に存在しない
+ */
 export async function getMe(req: Request, res: Response) {
   // req.user は requireAuth ミドルウェアが検証済みのトークンからセットしてくれている
   const user = await findUserById(req.user!.id);
@@ -23,8 +27,15 @@ export async function getMe(req: Request, res: Response) {
   return res.json({ user: toPublicUser(user) });
 }
 
-// 自分のプロフィール(ユーザー名・メールアドレス)を更新する。
-// パスワードも変更したい場合は currentPassword/newPassword を一緒に送る。
+/**
+ * 自分のプロフィール(ユーザー名・メールアドレス)を更新するAPI(PATCH /api/users/me、要ログイン)。
+ * パスワードも変更したい場合は currentPassword/newPassword を一緒に送る。
+ * @param req.body.username 新しい表示名(必須)
+ * @param req.body.email 新しいメールアドレス(必須、他人と重複不可)
+ * @param req.body.currentPassword パスワードを変更する場合のみ必須(本人確認用)
+ * @param req.body.newPassword 新しいパスワード(8文字以上)
+ * @returns 200: 更新後のユーザー情報 / 400: 入力不備 / 401: 現在のパスワード不一致 / 409: メール重複
+ */
 export async function updateMe(req: Request, res: Response) {
   const { username, email, currentPassword, newPassword } = req.body ?? {};
 
@@ -64,13 +75,20 @@ export async function updateMe(req: Request, res: Response) {
   res.json({ user: toPublicUser(updated!) });
 }
 
-// 管理者専用: 全ユーザーの一覧を取得する
+/**
+ * 全ユーザーの一覧を取得するAPI(GET /api/users、要管理者)。
+ * @returns ユーザー一覧(password_hashは含まない)
+ */
 export async function adminListUsers(_req: Request, res: Response) {
   const users = await listUsers();
   res.json({ users: users.map(toPublicUser) });
 }
 
-// 管理者専用: 任意のユーザーを削除する
+/**
+ * 任意のユーザーを削除するAPI(DELETE /api/users/:id、要管理者)。
+ * 自分自身は削除できないようにブロックする(誤操作で管理者不在になる事故を防ぐため)。
+ * @returns 204: 削除成功 / 400: 自分自身を指定 / 404: 存在しないユーザー
+ */
 export async function adminDeleteUser(req: Request, res: Response) {
   const id = Number(req.params.id);
 
@@ -88,7 +106,11 @@ export async function adminDeleteUser(req: Request, res: Response) {
   res.status(204).send();
 }
 
-// 管理者専用: ユーザーを停止/解除する
+/**
+ * ユーザーを停止/有効化するAPI(PATCH /api/users/:id/suspend、要管理者)。
+ * @param req.body.status "active" または "suspended"
+ * @returns 200: 更新後のユーザー / 400: status不正・自分自身を指定 / 404: 存在しないユーザー
+ */
 export async function adminSetUserStatus(req: Request, res: Response) {
   const id = Number(req.params.id);
   const { status } = req.body ?? {};
@@ -107,9 +129,15 @@ export async function adminSetUserStatus(req: Request, res: Response) {
   res.json({ user: toPublicUser(user) });
 }
 
-// 管理者専用: 一般ユーザーのパスワードを強制的に変更する(パスワードリセット)。
-// 元のパスワードを知る/確認する手段はどこにもない(password_hash は外部に一切返さない)。
-// あくまで「新しい値に上書きする」だけで、現在のパスワードを見ることはできない。
+/**
+ * 一般ユーザーのパスワードを強制的に変更する(パスワードリセット)API
+ * (PATCH /api/users/:id/password、要管理者)。
+ * 元のパスワードを知る/確認する手段はどこにもない(password_hash は外部に一切返さない)。
+ * あくまで「新しい値に上書きする」だけで、現在のパスワードを見ることはできない。
+ * 対象は一般ユーザーに限定し、管理者同士のパスワードは変更できない。
+ * @param req.body.newPassword 新しいパスワード(8文字以上)
+ * @returns 204: 変更成功 / 400: パスワード不備・自分自身を指定 / 403: 対象が管理者 / 404: 存在しないユーザー
+ */
 export async function adminSetUserPassword(req: Request, res: Response) {
   const id = Number(req.params.id);
   const { newPassword } = req.body ?? {};
@@ -135,7 +163,11 @@ export async function adminSetUserPassword(req: Request, res: Response) {
   res.status(204).send();
 }
 
-// 管理者専用: 任意のユーザーを管理者に昇格させる(降格は事故防止のためこの画面からは行わない)
+/**
+ * 任意のユーザーを管理者に昇格させるAPI(PATCH /api/users/:id/role、要管理者)。
+ * 降格は事故防止のためこのAPIからは行わない(昇格専用)。
+ * @returns 200: 更新後のユーザー(role: "admin") / 400: 既に管理者 / 404: 存在しないユーザー
+ */
 export async function adminSetUserRole(req: Request, res: Response) {
   const id = Number(req.params.id);
 

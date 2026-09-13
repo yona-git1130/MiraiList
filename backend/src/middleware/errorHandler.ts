@@ -1,7 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 
-// Expressは「引数が4つ」の関数を特別扱いし、エラー処理用ミドルウェアとして認識する。
-// ルートハンドラ内で throw されたエラーや、Express 5 が拾った Promise の reject はここに集まってくる。
+/**
+ * 全ルートの最後に登録するエラーハンドリングミドルウェア。
+ * Expressは「引数が4つ」の関数を特別扱いし、エラー処理用ミドルウェアとして認識する。
+ * ルートハンドラ内でthrowされたエラーや、Express 5が拾ったPromiseのrejectはここに集まってくる。
+ * 内部エラーの詳細はサーバーログにだけ出し、クライアントには最低限のメッセージのみ返す。
+ * @returns 500: 常に一律のエラーメッセージ
+ */
 export function errorHandler(
   err: unknown,
   _req: Request,

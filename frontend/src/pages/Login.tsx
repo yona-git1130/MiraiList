@@ -5,6 +5,7 @@ import { PasswordField } from "../components/PasswordField";
 import { useAuth } from "../context/AuthContext";
 import { resyncAfterPaste } from "../utils/pasteSync";
 
+/** ログイン画面。メールアドレスとパスワードでログインし、成功したらトップページへ遷移する。 */
 export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();

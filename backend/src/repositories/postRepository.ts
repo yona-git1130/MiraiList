@@ -51,6 +51,7 @@ type PostDetailRow = {
   reaction_counts: ReactionCounts;
 };
 
+/** SQLの生の行(PostDetailRow)を、API/フロントで使うPostDetail形にマッピングする。 */
 function toPostDetail(row: PostDetailRow): PostDetail {
   return {
     id: row.id,
@@ -68,6 +69,13 @@ function toPostDetail(row: PostDetailRow): PostDetail {
   };
 }
 
+/**
+ * 投稿を一覧取得する(マイリスト画面で使用)。
+ * @param params.tagId 指定するとそのタグの投稿だけに絞り込む
+ * @param params.authorId 指定するとその投稿者の投稿だけに絞り込む(マイリストでは常に指定する)
+ * @param params.achievedOnly trueなら達成済みの投稿だけに絞り込む
+ * @returns 作成日時の新しい順に並んだ投稿一覧
+ */
 export async function listPosts(params: {
   tagId?: number;
   authorId?: number;
@@ -107,6 +115,10 @@ export async function listPosts(params: {
   return result.rows.map(toPostDetail);
 }
 
+/**
+ * 投稿を1件、タグ・投稿者名・リアクション件数込みで取得する。
+ * @returns 見つかった投稿、なければnull
+ */
 export async function findPostById(id: number): Promise<PostDetail | null> {
   const result = await pool.query<PostDetailRow>(
     `${SELECT_POST_DETAIL}
@@ -117,6 +129,13 @@ export async function findPostById(id: number): Promise<PostDetail | null> {
   return result.rows[0] ? toPostDetail(result.rows[0]) : null;
 }
 
+/**
+ * 投稿を作成し、タグを紐付ける。
+ * 「投稿を作る」+「タグを紐付ける」は2つ以上のSQL文だが、片方だけ成功すると
+ * データが中途半端な状態になってしまう。BEGIN〜COMMITで1つの塊(トランザクション)にし、
+ * 途中でエラーが起きたらROLLBACKで全部なかったことにする。
+ * @returns 作成した投稿のID
+ */
 export async function createPost(params: {
   userId: number;
   title: string;
@@ -124,9 +143,6 @@ export async function createPost(params: {
   tagIds: number[];
   isPrivate: boolean;
 }): Promise<number> {
-  // 「投稿を作る」+「タグを紐付ける」は2つ以上のSQL文だが、片方だけ成功すると
-  // データが中途半端な状態になってしまう。BEGIN〜COMMITで1つの塊(トランザクション)にし、
-  // 途中でエラーが起きたらROLLBACKで全部なかったことにする。
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -154,6 +170,11 @@ export async function createPost(params: {
   }
 }
 
+/**
+ * 投稿の内容とタグをまとめて更新する。
+ * タグの更新は「一旦全部消してから、送られてきたタグだけ入れ直す」方式にする。
+ * 差分計算(増えた分だけ追加、減った分だけ削除)より単純で、タグの数も少ないので問題ない。
+ */
 export async function updatePost(
   id: number,
   params: { title: string; body: string; tagIds: number[]; isPrivate: boolean }
@@ -186,23 +207,30 @@ export async function updatePost(
   }
 }
 
+/** 投稿の達成状態(is_achieved)を更新する。 */
 export async function setAchieved(id: number, achieved: boolean): Promise<void> {
   await pool.query(`UPDATE posts SET is_achieved = $1 WHERE id = $2`, [achieved, id]);
 }
 
-// 達成直後のモーダルで入力する感想。みんなのリストに表示される
+/** 達成直後のモーダルで入力する感想を保存する。みんなのリストに表示される。 */
 export async function setAchievementComment(id: number, comment: string): Promise<void> {
   await pool.query(`UPDATE posts SET achievement_comment = $1 WHERE id = $2`, [comment, id]);
 }
 
+/**
+ * 投稿を完全に削除する(投稿者本人による削除で使用)。
+ * postsを消せば、外部キーにON DELETE CASCADEを指定しているため
+ * post_tags/comments/reactionsの関連行も自動で一緒に消える。
+ */
 export async function deletePost(id: number): Promise<void> {
-  // posts を消せば、外部キーに ON DELETE CASCADE を指定しているため
-  // post_tags / comments / reactions の関連行も自動で一緒に消える
   await pool.query(`DELETE FROM posts WHERE id = $1`, [id]);
 }
 
-// 管理者が他人の投稿を削除するときは、完全には消さずフラグだけ立てる(ソフトデリート)。
-// こうしておくと、投稿者本人の「リスト一覧」で「管理者により削除されました」と表示できる。
+/**
+ * 管理者が他人の投稿を削除するときに使う、フラグを立てるだけのソフトデリート。
+ * 完全には消さないことで、投稿者本人の「リスト一覧」で
+ * 「管理者により削除されました」と表示できるようにしている。
+ */
 export async function softDeleteByAdmin(id: number): Promise<void> {
   await pool.query(`UPDATE posts SET deleted_by_admin = true WHERE id = $1`, [id]);
 }

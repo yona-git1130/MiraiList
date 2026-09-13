@@ -6,10 +6,12 @@ import { getPostRequest, updatePostRequest } from "../api/posts";
 import { ApiError } from "../api/client";
 import { resyncAfterPaste } from "../utils/pasteSync";
 
-// 投稿の「コメント」欄だけを変更するための専用画面。
-// タイトル・タグはリスト編集画面(PostForm)側で変更する仕組みなので、ここでは触らない。
-// バックエンドの更新APIはタイトル・本文・タグをまとめて送る仕様なので、
-// 取得しておいたタイトル・タグをそのまま使い、コメントだけ書き換えて送信する。
+/**
+ * 投稿の「コメント」欄だけを変更するための専用画面。
+ * タイトル・タグはリスト編集画面(PostForm)側で変更する仕組みなので、ここでは触らない。
+ * バックエンドの更新APIはタイトル・本文・タグをまとめて送る仕様なので、
+ * 取得しておいたタイトル・タグをそのまま使い、コメントだけ書き換えて送信する。
+ */
 export function PostCommentEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();

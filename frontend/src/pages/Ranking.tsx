@@ -12,6 +12,11 @@ import { excerpt } from "../utils/format";
 import type { RankingEntry } from "../types/ranking";
 import type { Tag } from "../types/tag";
 
+/**
+ * みんなのリスト画面。全ユーザーの公開投稿を一覧表示し、タグ・達成状況で絞り込める。
+ * 他人の投稿にはリアクションできるが、自分の投稿は件数バッジだけの表示になる。
+ * 管理者は投稿をここから直接ソフトデリートできる。
+ */
 export function Ranking() {
   const { user } = useAuth();
   const [tags, setTags] = useState<Tag[]>([]);

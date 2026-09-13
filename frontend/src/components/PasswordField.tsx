@@ -13,8 +13,16 @@ type PasswordFieldProps = {
   autoComplete?: "current-password" | "new-password";
 };
 
-// ログイン・新規登録・アカウント編集で使う、表示/非表示を切り替えられるパスワード入力欄。
-// 各画面で同じトグルロジックを書かなくて済むように共通コンポーネント化している。
+/**
+ * ログイン・新規登録・アカウント編集で使う、表示/非表示を切り替えられるパスワード入力欄。
+ * 各画面で同じトグルロジックを書かなくて済むように共通コンポーネント化している。
+ * @param label 入力欄のラベル文字列
+ * @param value 現在の入力値
+ * @param onChange 入力値が変わったときの更新関数
+ * @param minLength 最小文字数(バリデーション用)
+ * @param required 必須入力かどうか
+ * @param autoComplete ブラウザ/パスワードマネージャーへのヒント("current-password"か"new-password")
+ */
 export function PasswordField({
   label,
   value,

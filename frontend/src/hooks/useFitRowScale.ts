@@ -1,12 +1,17 @@
 import { useEffect, useRef } from "react";
 import type { DependencyList } from "react";
 
-// 中身(タグボタンなど)を、実際に描画された幅を測って縮小/拡大し、
-// 親要素の幅にぴったり収まる(横スクロールなしの1行)ようにするためのフック。
-// CSS側は `--<cssVar>` を参照する形にしておき、このフックがJSでその値を計算して設定する。
-//
-// maxScale: 1にすると「縮むだけ・元のサイズより大きくはしない」(ヘッダーなど)、
-//           Infinityにすると「余った幅があれば埋めるまで拡大もする」(タグの絞り込み行など)
+/**
+ * 中身(タグボタンなど)を、実際に描画された幅を測って縮小/拡大し、
+ * 親要素の幅にぴったり収まる(横スクロールなしの1行)ようにするためのフック。
+ * CSS側は `var(--<cssVar>)` を参照する形にしておき、このフックがJSでその値を計算して設定する。
+ * 画面リサイズや中身の変化(ResizeObserver)にも追従して再計算する。
+ * @param cssVar 倍率を反映するCSSカスタムプロパティ名(先頭の `--` は含めない)
+ * @param maxScale 倍率の上限。1にすると「縮むだけ・元のサイズより大きくはしない」(ヘッダーなど)、
+ *   Infinityにすると「余った幅があれば埋めるまで拡大もする」(タグの絞り込み行など)
+ * @param deps この値が変わるたびに再計算する(タグ一覧が読み込まれたときなど)
+ * @returns 対象の要素に渡すref
+ */
 export function useFitRowScale<T extends HTMLElement = HTMLDivElement>(
   cssVar: string,
   maxScale: number,

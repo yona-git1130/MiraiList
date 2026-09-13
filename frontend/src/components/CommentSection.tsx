@@ -17,6 +17,11 @@ function formatDateTime(iso: string): string {
   });
 }
 
+/**
+ * 投稿詳細画面のコメント欄。一覧表示・投稿・削除をまとめて扱う。
+ * 未ログイン時は投稿フォームの代わりにログイン導線を表示する。
+ * @param postId コメント対象の投稿ID
+ */
 export function CommentSection({ postId }: { postId: number }) {
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);

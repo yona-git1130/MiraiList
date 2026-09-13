@@ -22,6 +22,11 @@ type AuthContextValue = {
 // props でバケツリレーしなくても、ツリーのどこからでも読み書きできるようにする仕組み
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/**
+ * アプリ全体をラップし、ログイン状態(user)と認証関連の操作をContext経由で配る。
+ * 起動時は保存済みトークンからログイン状態の復元を試み、その間はloadingをtrueにする。
+ * @param children 認証状態を使う可能性のあるアプリ全体
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,7 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// useContext を毎回nullチェックせずに使えるよう、専用フックにまとめる
+/**
+ * AuthContextの値を取得するフック。useContextを毎回nullチェックせずに使えるようまとめている。
+ * AuthProviderの内側以外で呼ぶとエラーを投げる。
+ */
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) {

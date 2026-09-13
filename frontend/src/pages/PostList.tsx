@@ -7,6 +7,10 @@ import { useFitRowScale } from "../hooks/useFitRowScale";
 import type { Post } from "../types/post";
 import type { Tag } from "../types/tag";
 
+/**
+ * マイリスト画面(自分の投稿一覧)。タグまたは達成状況での絞り込みができる。
+ * タグ絞り込みの行は常にカードと同じ幅にぴったり収まるよう useFitRowScale で調整している。
+ */
 export function PostList() {
   const [tags, setTags] = useState<Tag[]>([]);
   // undefined = 絞り込みなし(すべて表示)

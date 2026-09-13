@@ -1,7 +1,11 @@
 import { apiFetch } from "./client";
 import type { RankingEntry } from "../types/ranking";
 
-// tagId未指定(undefined)は「すべて」タブ用。タグで絞り込まず全投稿を対象にする
+/**
+ * みんなのリスト(リアクション数ランキング)を取得する。
+ * @param params.tagId 指定するとそのタグで絞り込む。未指定は「すべて」タブ用
+ * @param params.achievedOnly trueなら達成済みの投稿だけに絞り込む
+ */
 export function getRankingRequest(params: { tagId?: number; achievedOnly?: boolean } = {}) {
   const search = new URLSearchParams();
   if (params.tagId !== undefined) search.set("tagId", String(params.tagId));

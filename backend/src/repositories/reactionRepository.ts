@@ -1,6 +1,10 @@
 import { pool } from "../db/pool";
 import { REACTION_TYPES, ReactionType, ReactionCounts, RankingEntry } from "../types/reaction";
 
+/**
+ * リアクションを追加する、または既存のリアクションを別の種類に上書きする。
+ * reactionsテーブルの `UNIQUE(post_id, user_id)` 制約を利用し、1回のSQLで実現する。
+ */
 export async function upsertReaction(params: {
   postId: number;
   userId: number;
@@ -19,6 +23,7 @@ export async function upsertReaction(params: {
   );
 }
 
+/** 指定ユーザーが指定投稿に付けたリアクションを削除する。 */
 export async function deleteReaction(params: { postId: number; userId: number }): Promise<void> {
   await pool.query(`DELETE FROM reactions WHERE post_id = $1 AND user_id = $2`, [
     params.postId,
@@ -26,12 +31,17 @@ export async function deleteReaction(params: { postId: number; userId: number })
   ]);
 }
 
-// tagId を指定すると、そのタグが付いている投稿だけに絞り込む。
-// 省略(undefined)すると「すべて」タブ用に、タグを問わず全投稿を対象にする。
-// リアクション総数(種類は問わない)の多い順トップN。
-// LEFT JOINなので、リアクションが1件も付いていない投稿も(件数すべて0として)一覧には残る。
-// みんなのタネ画面のカードと同じ「種類ごとの絵文字+件数」で表示できるよう、
-// 種類別の内訳(counts)も1回のクエリでまとめて取得する。
+/**
+ * みんなのリスト用に、リアクション総数(種類は問わない)の多い順で投稿を取得する。
+ * LEFT JOINなので、リアクションが1件も付いていない投稿も(件数すべて0として)一覧には残る。
+ * カードと同じ「種類ごとの絵文字+件数」で表示できるよう、種類別の内訳(counts)も
+ * 1回のクエリでまとめて取得する。
+ * @param tagId 指定するとそのタグが付いている投稿だけに絞り込む。省略(undefined)すると
+ *   「すべて」タブ用に、タグを問わず全投稿を対象にする
+ * @param limit 取得件数の上限
+ * @param achievedOnly trueなら達成済みの投稿だけに絞り込む
+ * @returns 合計リアクション数の多い順に並んだランキング一覧
+ */
 export async function getRanking(
   tagId: number | undefined,
   limit = 10,
@@ -122,7 +132,10 @@ export async function getRanking(
   }));
 }
 
-// ログイン中のユーザーが、この投稿に対してすでに押しているリアクションを取得する(なければnull)
+/**
+ * 指定ユーザーが指定投稿に対して既に押しているリアクションを取得する。
+ * @returns リアクションの種類、未リアクションならnull
+ */
 export async function getUserReaction(postId: number, userId: number): Promise<ReactionType | null> {
   const result = await pool.query<{ reaction_type: ReactionType }>(
     `SELECT reaction_type FROM reactions WHERE post_id = $1 AND user_id = $2`,

@@ -8,6 +8,10 @@ import { ApiError } from "../api/client";
 import { resyncAfterPaste } from "../utils/pasteSync";
 import registerHero from "../assets/register-hero.jpg";
 
+/**
+ * 新規登録画面。写真・ロゴ・紹介文を上部に、登録フォームを下部に配置した専用レイアウト。
+ * 登録に成功するとそのままログイン状態になり、トップページへ遷移する。
+ */
 export function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();

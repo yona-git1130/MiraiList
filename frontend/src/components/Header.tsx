@@ -3,6 +3,11 @@ import { useAuth } from "../context/AuthContext";
 import { useFitRowScale } from "../hooks/useFitRowScale";
 import { UserMenu } from "./UserMenu";
 
+/**
+ * 全画面共通のヘッダー。ロゴとナビゲーション(ログイン状態で内容が変わる)を表示する。
+ * ログイン中: リストに追加・マイリスト・みんなのリスト・ユーザーメニュー
+ * 未ログイン: みんなのリスト・ログイン・新規登録(ログイン/新規登録画面ではリンクを一部省略)
+ */
 export function Header() {
   const { user, logout } = useAuth();
   const location = useLocation();

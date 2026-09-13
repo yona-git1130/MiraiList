@@ -8,6 +8,7 @@ import { getToken, clearToken } from "./token";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+/** APIがエラーを返したときに投げる例外。HTTPステータスコードとメッセージを保持する。 */
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -16,6 +17,15 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * バックエンドAPIを呼び出す共通関数。ログイン中ならJWTを自動で付与し、
+ * エラーレスポンスはApiErrorに変換して投げる。401の場合はトークンを破棄し、
+ * `auth:unauthorized` イベントを発火してアプリ全体に伝える。
+ * @param path APIのパス(例: "/posts")。API_URLに続けて結合される
+ * @param options fetchにそのまま渡すオプション(method, bodyなど)
+ * @returns レスポンスのJSONをパースした値(204の場合はundefined)
+ * @throws {ApiError} レスポンスが成功以外のステータスだった場合
+ */
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
 

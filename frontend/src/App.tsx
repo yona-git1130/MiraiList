@@ -12,6 +12,7 @@ import { AccountEdit } from "./pages/AccountEdit";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 
+/** アプリのルート。ルーティング(BrowserRouter)と認証状態(AuthProvider)を全体に提供する。 */
 function App() {
   return (
     <BrowserRouter>
@@ -22,9 +23,11 @@ function App() {
   );
 }
 
-// AuthProviderの外ではuseAuthが使えないので、専用のコンポーネントに分けている。
-// loading中(保存済みトークンからログイン状態を復元している間)は画面を出さないことで、
-// 「一瞬だけ未ログイン画面がちらつく」のを防ぐ。
+/**
+ * 実際の画面ルーティング定義。AuthProviderの外ではuseAuthが使えないので、専用のコンポーネントに分けている。
+ * loading中(保存済みトークンからログイン状態を復元している間)は画面を出さないことで、
+ * 「一瞬だけ未ログイン画面がちらつく」のを防ぐ。
+ */
 function AppRoutes() {
   const { loading } = useAuth();
 

@@ -5,6 +5,16 @@ import { useFitRowScale } from "../hooks/useFitRowScale";
 import { REACTION_TYPES, REACTION_LABELS } from "../types/reaction";
 import type { ReactionType, ReactionCounts } from "../types/reaction";
 
+/**
+ * 投稿に対するリアクション(絵文字)ボタン群。押すと種類を選択/変更/取り消しできる。
+ * 自分の投稿には反応できないため、表示方法をprops経由で切り替えられるようにしている。
+ * @param postId リアクション対象の投稿ID
+ * @param initialCounts 初期表示するリアクション種別ごとの件数
+ * @param isOwnPost 自分自身の投稿かどうか(trueだと操作を無効化する)
+ * @param showCounts ボタンに件数も表示するか(一覧ではfalseにしてボタンだけ見せる)
+ * @param hideForOwnPost 自分の投稿のとき、何も表示しない(true)か、押せない件数バッジだけ出す(false)か
+ * @param fitToRow 折り返さず常に横一列(横スクロールなし)に収めるか
+ */
 export function ReactionBar({
   postId,
   initialCounts,

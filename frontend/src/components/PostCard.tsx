@@ -8,6 +8,12 @@ import { setPostAchievedRequest, setAchievementCommentRequest, deletePostRequest
 import { excerpt, formatDate } from "../utils/format";
 import type { Post } from "../types/post";
 
+/**
+ * マイリスト・みんなのリストで使う投稿カード。タグ・タイトル・本文抜粋・達成ボタン・
+ * リアクションをまとめて表示する。管理者に削除された投稿は専用の簡略表示になる。
+ * @param post 表示する投稿データ
+ * @param onDeleted 管理者削除済みの投稿を本人が完全に削除したあとに呼ばれる(一覧の再取得などに使う)
+ */
 export function PostCard({ post, onDeleted }: { post: Post; onDeleted?: () => void }) {
   const { user } = useAuth();
   const isOwnPost = !!user && post.author.id === user.id;

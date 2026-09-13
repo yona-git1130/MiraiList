@@ -13,6 +13,10 @@ export type UserRow = {
 // 「うっかりハッシュ値までレスポンスに含めてしまう」事故を型の時点で防ぐ
 export type PublicUser = Omit<UserRow, "password_hash">;
 
+/**
+ * DBの行(UserRow)から、外部に返してよい形(PublicUser)に変換する。
+ * password_hashを除外することで、うっかりハッシュ値までレスポンスに含めてしまう事故を防ぐ。
+ */
 export function toPublicUser(row: UserRow): PublicUser {
   const { password_hash, ...publicUser } = row;
   return publicUser;

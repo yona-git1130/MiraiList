@@ -4,6 +4,12 @@ import { listTags } from "../repositories/tagRepository";
 
 // リクエストで送られてきたタグID配列のうち、実在するタグだけを残す。
 // 存在しないIDが1つでも混ざっていたらエラーにする(不正なデータがDBに入るのを防ぐ)。
+/**
+ * リクエストで送られてきたtagIdsが「数値の配列」かつ「実在するタグIDだけ」であることを検証する。
+ * @param tagIds リクエストボディの生の値(型不明なのでunknown)
+ * @returns 検証済みのタグID配列
+ * @throws 配列でない/数値でない要素を含む/存在しないIDを含む場合、`status`プロパティ付きのErrorを投げる
+ */
 async function validateTagIds(tagIds: unknown): Promise<number[]> {
   if (tagIds === undefined) return [];
   if (!Array.isArray(tagIds) || !tagIds.every((t) => typeof t === "number")) {
@@ -17,6 +23,12 @@ async function validateTagIds(tagIds: unknown): Promise<number[]> {
   return tagIds;
 }
 
+/**
+ * マイリスト(自分の投稿一覧)を取得するAPI(GET /api/posts、要ログイン)。
+ * @param req.query.tagId タグでの絞り込み(省略時は全タグ対象)
+ * @param req.query.achieved "true"なら達成済みの投稿だけに絞り込む
+ * @returns ログイン中ユーザー自身の投稿一覧
+ */
 export async function listPosts(req: Request, res: Response) {
   const tagId = req.query.tagId !== undefined ? Number(req.query.tagId) : undefined;
   const achievedOnly = req.query.achieved === "true";
@@ -25,6 +37,10 @@ export async function listPosts(req: Request, res: Response) {
   res.json({ posts });
 }
 
+/**
+ * 投稿詳細を取得するAPI(GET /api/posts/:id、ログイン不要)。
+ * @returns 200: 投稿詳細(リアクション件数込み) / 404: 存在しない投稿
+ */
 export async function getPost(req: Request, res: Response) {
   const post = await postRepository.findPostById(Number(req.params.id));
   if (!post) {
@@ -34,6 +50,14 @@ export async function getPost(req: Request, res: Response) {
   res.json({ post });
 }
 
+/**
+ * 投稿を新規作成するAPI(POST /api/posts、要ログイン・要active)。
+ * @param req.body.title タイトル(必須)
+ * @param req.body.body コメント本文(任意、未指定なら空文字)
+ * @param req.body.tagIds 付与するタグID配列(1つ以上必須)
+ * @param req.body.isPrivate trueなら「マイリストにだけ表示」の非公開投稿にする
+ * @returns 201: 作成した投稿 / 400: タイトル未入力・タグ不正・タグ未選択
+ */
 export async function createPost(req: Request, res: Response) {
   const { title, body, tagIds, isPrivate } = req.body ?? {};
 
@@ -64,6 +88,11 @@ export async function createPost(req: Request, res: Response) {
   res.status(201).json({ post });
 }
 
+/**
+ * 投稿を編集するAPI(PUT /api/posts/:id、投稿者本人 or 管理者)。
+ * createPostと同じ項目一式(title/body/tagIds/isPrivate)を丸ごと上書きする。
+ * @returns 200: 更新後の投稿 / 403: 本人でも管理者でもない / 404: 存在しない投稿
+ */
 export async function updatePost(req: Request, res: Response) {
   const id = Number(req.params.id);
   const post = await postRepository.findPostById(id);
@@ -102,6 +131,12 @@ export async function updatePost(req: Request, res: Response) {
   res.json({ post: updated });
 }
 
+/**
+ * 投稿を達成済みにするAPI(PATCH /api/posts/:id/achieved、投稿者本人 or 管理者)。
+ * 一度達成にした投稿は取り消せない仕様のため、achieved: falseへの変更はAPI側でも拒否する。
+ * @param req.body.achieved true/booleanのみ許可
+ * @returns 200: 更新後の投稿 / 400: 取り消し操作 / 403: 権限なし / 404: 存在しない投稿
+ */
 export async function setAchieved(req: Request, res: Response) {
   const id = Number(req.params.id);
   const { achieved } = req.body ?? {};
@@ -128,8 +163,13 @@ export async function setAchieved(req: Request, res: Response) {
   res.json({ post: updated });
 }
 
-// 達成直後のモーダルで「保存」を押したときに呼ばれる。感想は空文字も許容する
-// (テキストエリアを空のまま保存された場合など)。
+/**
+ * 達成した感想を保存するAPI(PATCH /api/posts/:id/achievement-comment、投稿者本人のみ)。
+ * 達成直後のモーダルで「保存」を押したときに呼ばれる。感想は空文字も許容する
+ * (テキストエリアを空のまま保存された場合など)。
+ * @param req.body.comment 感想の文字列(空文字可)
+ * @returns 200: 更新後の投稿 / 400: 未達成の投稿への保存 / 403: 本人以外 / 404: 存在しない投稿
+ */
 export async function setAchievementComment(req: Request, res: Response) {
   const id = Number(req.params.id);
   const { comment } = req.body ?? {};
@@ -156,6 +196,13 @@ export async function setAchievementComment(req: Request, res: Response) {
   res.json({ post: updated });
 }
 
+/**
+ * 投稿を削除するAPI(DELETE /api/posts/:id、投稿者本人 or 管理者)。
+ * 本人が削除する場合は完全削除、管理者が他人の投稿を削除する場合はソフトデリート
+ * (deleted_by_adminフラグを立てるだけ)になり、投稿者本人のマイリストに
+ * 「管理者により削除されました」と表示される。
+ * @returns 204: 削除成功 / 403: 権限なし / 404: 存在しない投稿
+ */
 export async function deletePost(req: Request, res: Response) {
   const id = Number(req.params.id);
   const post = await postRepository.findPostById(id);

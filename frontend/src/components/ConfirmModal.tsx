@@ -1,5 +1,10 @@
-// 「はい/いいえ」で確認を取るための汎用モーダル。
-// window.confirm()は使わず、この自作モーダルで確認を取る。
+/**
+ * 「はい/いいえ」で確認を取るための汎用モーダル。
+ * window.confirm()は使わず、この自作モーダルで確認を取る。
+ * @param message 確認メッセージ
+ * @param onConfirm 「はい」を押したときの処理
+ * @param onCancel 「いいえ」または背景クリックで閉じたときの処理
+ */
 export function ConfirmModal({
   message,
   onConfirm,

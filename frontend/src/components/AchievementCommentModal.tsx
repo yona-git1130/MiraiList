@@ -1,7 +1,11 @@
 import { useState } from "react";
 
-// 投稿を達成済みにした直後に表示する、感想入力用のモーダル。
-// 「保存」で感想を送信、右上の「×」で(何も保存せず)閉じられる。
+/**
+ * 投稿を達成済みにした直後に表示する、感想入力用のモーダル。
+ * 「保存」で感想を送信、右上の「×」で(何も保存せず)閉じられる。
+ * @param onSave 「保存」を押したときの処理(入力した感想を渡す)
+ * @param onClose 「×」または背景クリックで閉じたときの処理
+ */
 export function AchievementCommentModal({
   onSave,
   onClose,

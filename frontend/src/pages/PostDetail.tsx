@@ -10,6 +10,10 @@ import { EMPTY_REACTION_COUNTS } from "../types/reaction";
 import { ApiError } from "../api/client";
 import { formatDateTime } from "../utils/format";
 
+/**
+ * 投稿詳細画面。タイトル・タグ・本文・投稿者・リアクション・コメント欄をまとめて表示する。
+ * 投稿者本人または管理者だけに編集・コメント編集・削除ボタンを見せる(UI上のガードのみ)。
+ */
 export function PostDetail() {
   // useParams: URLの :id 部分(例: /posts/3 の "3")を取り出す
   const { id } = useParams<{ id: string }>();

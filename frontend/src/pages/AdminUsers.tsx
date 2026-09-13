@@ -14,10 +14,13 @@ import {
 import type { User } from "../types/user";
 import { ApiError } from "../api/client";
 
-// 操作欄のハンバーガーメニュー。外側クリックで閉じる(UserMenuと同じ考え方)。
-// 中身は呼び出し側が children(close) で自由に組み立てる。
-// テーブルが overflow-x: auto で囲まれていてそのままでは吹き出しが枠内で
-// 切れてしまうため、document.body に portal で描画し、画面基準の座標で位置合わせする。
+/**
+ * 操作欄のハンバーガーメニュー。外側クリックで閉じる(UserMenuと同じ考え方)。
+ * 中身は呼び出し側が children(close) で自由に組み立てる。
+ * テーブルが overflow-x: auto で囲まれていてそのままでは吹き出しが枠内で
+ * 切れてしまうため、document.body に portal で描画し、画面基準の座標で位置合わせする。
+ * @param children メニューの中身を組み立てる関数。呼ぶとメニューを閉じるcloseを受け取れる
+ */
 function RowMenu({ children }: { children: (close: () => void) => ReactNode }) {
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState<{ top: number; right: number } | null>(null);
@@ -79,6 +82,10 @@ function RowMenu({ children }: { children: (close: () => void) => ReactNode }) {
   );
 }
 
+/**
+ * ユーザー管理画面(管理者専用)。全ユーザーの一覧表示と、停止/有効化・削除・
+ * 一般ユーザーのパスワードリセット・管理者への昇格を行える。自分自身への操作は無効化する。
+ */
 export function AdminUsers() {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);

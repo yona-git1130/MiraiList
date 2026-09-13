@@ -6,6 +6,10 @@ import { useAuth } from "../context/AuthContext";
 import { ApiError } from "../api/client";
 import { resyncAfterPaste } from "../utils/pasteSync";
 
+/**
+ * アカウント編集画面。ユーザー名・メールアドレスの変更、および任意でのパスワード変更ができる。
+ * パスワードを変えないときは現在/新しいパスワードとも空欄のままAPIへは送らない。
+ */
 export function AccountEdit() {
   const { user, updateProfile } = useAuth();
   const [username, setUsername] = useState(user?.username ?? "");

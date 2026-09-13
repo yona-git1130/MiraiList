@@ -8,8 +8,11 @@ import type { Tag } from "../types/tag";
 import { ApiError } from "../api/client";
 import { resyncAfterPaste } from "../utils/pasteSync";
 
-// 作成画面(/posts/new)と編集画面(/posts/:id/edit)を1つのコンポーネントで兼用する。
-// URLに :id があるかどうかで「編集モードかどうか」を判定する。
+/**
+ * 作成画面(/posts/new)と編集画面(/posts/:id/edit)を1つのコンポーネントで兼用する。
+ * URLに :id があるかどうかで「編集モードかどうか」を判定する。
+ * 非公開(マイリストにだけ表示)の切り替えは作成時のみ可能で、編集画面からは変更できない。
+ */
 export function PostForm() {
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);

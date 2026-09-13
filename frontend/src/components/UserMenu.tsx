@@ -3,6 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import type { User } from "../types/user";
 import { UserIcon } from "./UserIcon";
 
+/**
+ * ヘッダー右端のユーザーアイコンを押すと開く、ドロップダウンメニュー。
+ * アカウント編集・(管理者なら)ユーザー管理・ログアウトへの導線をまとめている。
+ * @param user ログイン中のユーザー情報
+ * @param onLogout ログアウト処理(呼び出し後、ログイン画面へ遷移する)
+ */
 export function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

@@ -23,6 +23,7 @@ type CommentRow = {
   author_username: string;
 };
 
+/** SQLの生の行(CommentRow)を、API/フロントで使うCommentDetail形にマッピングする。 */
 function toCommentDetail(row: CommentRow): CommentDetail {
   return {
     id: row.id,
@@ -33,6 +34,10 @@ function toCommentDetail(row: CommentRow): CommentDetail {
   };
 }
 
+/**
+ * 投稿へのコメントを一覧取得する。
+ * @returns 投稿日時の古い順に並んだコメント一覧
+ */
 export async function listCommentsByPost(postId: number): Promise<CommentDetail[]> {
   const result = await pool.query<CommentRow>(
     `${SELECT_COMMENT} WHERE c.post_id = $1 ORDER BY c.created_at ASC`,
@@ -41,11 +46,19 @@ export async function listCommentsByPost(postId: number): Promise<CommentDetail[
   return result.rows.map(toCommentDetail);
 }
 
+/**
+ * コメントを1件、投稿者名込みで取得する。
+ * @returns 見つかったコメント、なければnull
+ */
 export async function findCommentById(id: number): Promise<CommentDetail | null> {
   const result = await pool.query<CommentRow>(`${SELECT_COMMENT} WHERE c.id = $1`, [id]);
   return result.rows[0] ? toCommentDetail(result.rows[0]) : null;
 }
 
+/**
+ * コメントを新規作成する。
+ * @returns 作成したコメントのID
+ */
 export async function createComment(params: {
   postId: number;
   userId: number;
@@ -58,6 +71,7 @@ export async function createComment(params: {
   return result.rows[0].id;
 }
 
+/** コメントを削除する。 */
 export async function deleteComment(id: number): Promise<void> {
   await pool.query(`DELETE FROM comments WHERE id = $1`, [id]);
 }
