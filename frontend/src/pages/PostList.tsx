@@ -86,7 +86,7 @@ export function PostList() {
         {!loading && !error && posts.length === 0 && (
           <p className="empty-text">
             {achievedOnly
-              ? "達成した投稿がまだありません。"
+              ? "達成したリストがまだありません"
               : selectedTag
                 ? `${selectedTag.name}のリストがまだありません`
                 : "リストに追加をするとこちらに表示されます"}
