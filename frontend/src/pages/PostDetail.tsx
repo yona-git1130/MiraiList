@@ -8,16 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import type { Post } from "../types/post";
 import { EMPTY_REACTION_COUNTS } from "../types/reaction";
 import { ApiError } from "../api/client";
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatDateTime } from "../utils/format";
 
 export function PostDetail() {
   // useParams: URLの :id 部分(例: /posts/3 の "3")を取り出す

@@ -5,19 +5,8 @@ import { ReactionBar } from "./ReactionBar";
 import { ConfirmModal } from "./ConfirmModal";
 import { AchievementCommentModal } from "./AchievementCommentModal";
 import { setPostAchievedRequest, setAchievementCommentRequest, deletePostRequest } from "../api/posts";
+import { excerpt, formatDate } from "../utils/format";
 import type { Post } from "../types/post";
-
-function excerpt(text: string, max = 80): string {
-  return text.length > max ? `${text.slice(0, max)}…` : text;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-}
 
 export function PostCard({ post, onDeleted }: { post: Post; onDeleted?: () => void }) {
   const { user } = useAuth();
@@ -136,7 +125,7 @@ export function PostCard({ post, onDeleted }: { post: Post; onDeleted?: () => vo
             ))}
             <h2 className="card-title">{post.title}</h2>
           </div>
-          <p className="card-excerpt">{excerpt(post.body)}</p>
+          <p className="card-excerpt">{excerpt(post.body, 80)}</p>
           {/* 達成直後のモーダルで入力された感想。書かれている投稿だけ表示する */}
           {post.achievement_comment && (
             <div className="achievement-comment">

@@ -8,12 +8,9 @@ import { deletePostRequest } from "../api/posts";
 import { listTagsRequest } from "../api/tags";
 import { useAuth } from "../context/AuthContext";
 import { useFitRowScale } from "../hooks/useFitRowScale";
+import { excerpt } from "../utils/format";
 import type { RankingEntry } from "../types/ranking";
 import type { Tag } from "../types/tag";
-
-function excerpt(text: string, max = 60): string {
-  return text.length > max ? `${text.slice(0, max)}…` : text;
-}
 
 export function Ranking() {
   const { user } = useAuth();
@@ -150,7 +147,7 @@ export function Ranking() {
                     </button>
                   )}
                 </div>
-                <p className="rank-excerpt">{excerpt(entry.body)}</p>
+                <p className="rank-excerpt">{excerpt(entry.body, 60)}</p>
                 {/* 達成直後のモーダルで入力された感想。書かれている投稿だけ表示する */}
                 {entry.achievement_comment && (
                   <div className="achievement-comment">
