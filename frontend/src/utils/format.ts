@@ -21,7 +21,7 @@ export function formatDate(iso: string): string {
 }
 
 /**
- * 日付+時刻を表示する(投稿詳細画面で使用)。
+ * 日付+時刻を表示する(リスト詳細画面で使用)。
  * @param iso ISO 8601形式の日時文字列
  */
 export function formatDateTime(iso: string): string {

@@ -11,7 +11,7 @@ import { ApiError } from "../api/client";
 import { formatDateTime } from "../utils/format";
 
 /**
- * 投稿詳細画面。タイトル・タグ・本文・投稿者・リアクション・コメント欄をまとめて表示する。
+ * リスト詳細画面。タイトル・タグ・本文・投稿者・リアクション・コメント欄をまとめて表示する。
  * 投稿者本人または管理者だけに編集・コメント編集・削除ボタンを見せる(UI上のガードのみ)。
  */
 export function PostDetail() {
