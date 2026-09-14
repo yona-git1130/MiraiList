@@ -11,6 +11,7 @@ import { AdminUsers } from "./pages/AdminUsers";
 import { AccountEdit } from "./pages/AccountEdit";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import { NotFound } from "./pages/NotFound";
 
 /** アプリのルート。ルーティング(BrowserRouter)と認証状態(AuthProvider)を全体に提供する。 */
 function App() {
@@ -103,6 +104,8 @@ function AppRoutes() {
       />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      {/* どのパスにも一致しなかった場合の受け皿。必ず一番最後に書く */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

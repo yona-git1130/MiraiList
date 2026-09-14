@@ -4,6 +4,9 @@ dist
 .env
 .DS_Store
 
+# 手動DBバックアップ(README「DBバックアップ(手動)」参照)。個人情報を含むため管理対象外
+*.dump
+
 # Claude Codeのローカル設定(このマシン固有の許可設定などを含むため共有しない)
 .claude/settings.local.json
 

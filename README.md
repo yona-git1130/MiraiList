@@ -1,5 +1,7 @@
 # 未来リスト (Mirai List)
 
+[![CI](https://github.com/yona-git1130/idea_no_tane/actions/workflows/ci.yml/badge.svg)](https://github.com/yona-git1130/idea_no_tane/actions/workflows/ci.yml)
+
 「やってみたい」を自由に書き出し、タグで整理し、達成を記録・共有できるバケットリストアプリです。
 
 React (Vite) のSPAフロントエンドと、Node.js + Express + PostgreSQLのREST APIバックエンドで構成されています。
@@ -142,3 +144,37 @@ npm run dev
 | `/ranking` | みんなのリスト | 要ログイン |
 | `/account` | アカウントを編集 | 要ログイン |
 | `/admin/users` | ユーザー管理 | 要管理者 |
+
+## セキュリティ対策
+
+- **ログイン・新規登録のレート制限**: 同一IPからの試行を15分あたり20回までに制限し、総当たり攻撃(ブルートフォース)を防ぐ(`express-rate-limit`、`backend/src/middleware/rateLimiter.ts`)
+- **セキュリティヘッダー**: `helmet` によって、HSTS・X-Content-Type-Optionsなど基本的なセキュリティ関連のレスポンスヘッダーを付与
+- **起動時の環境変数チェック**: `DATABASE_URL` / `JWT_SECRET` / `FRONTEND_ORIGIN` が未設定のまま起動しようとすると、エラーメッセージを出してすぐに停止する(`backend/src/config/checkEnv.ts`)。実際にDB接続やJWT発行が呼ばれるまで気づけない、という事態を防ぐ
+- **予期しないエラーへの対応**:
+  - 存在しないURLへアクセスした場合は404画面を表示する(`frontend/src/pages/NotFound.tsx`)
+  - 画面のどこかで想定外の例外が起きても画面全体が真っ白にならないよう、エラーバウンダリで受け止めて再読み込みを促す(`frontend/src/components/ErrorBoundary.tsx`)
+
+## CI(自動テスト)
+
+`.github/workflows/ci.yml` により、`main` ブランチへのpush・向けのPull Requestのたびに、バックエンド・フロントエンドそれぞれで型チェック(`tsc`)・ユニットテスト(`vitest`)・ビルドを自動実行しています。
+
+## DBバックアップ(手動)
+
+Supabaseの無料プランには自動バックアップがないため、必要に応じて手動でバックアップを取ります。`psql`/`pg_dump`(PostgreSQLクライアントツール)がローカルにインストールされている前提です。
+
+1. Supabaseダッシュボードの Project Settings → Database から接続文字列(Connection string, URI形式)をコピーする
+2. ターミナルでダンプを取得する
+
+   ```bash
+   pg_dump "<Supabaseの接続文字列>" -F c -f backup_$(date +%Y%m%d).dump
+   ```
+
+   - `-F c` はpg_restoreで戻せる圧縮済みのカスタム形式
+   - 大きな変更をした前後や、月1回など定期的に実行するのがおすすめ
+   - ダンプファイルはリポジトリに含めず、自分のPCやクラウドストレージなど安全な場所に保管する
+
+3. 復元する場合
+
+   ```bash
+   pg_restore --clean --if-exists -d "<復元先の接続文字列>" backup_20250101.dump
+   ```

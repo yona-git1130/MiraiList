@@ -4,6 +4,7 @@
 
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import { authRouter } from "./routes/authRoutes";
 import { userRouter } from "./routes/userRoutes";
 import { postRouter } from "./routes/postRoutes";
@@ -12,6 +13,12 @@ import { commentsRouter } from "./routes/commentRoutes";
 import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
+
+// helmet: HSTS・X-Content-Type-Options・X-Frame-Optionsなど、
+// セキュリティ関連のレスポンスヘッダーをまとめて適切な値に設定してくれるミドルウェア。
+// このAPIはブラウザから直接HTMLとして表示されることはないので、
+// フロントエンド側のCSPと衝突しないようcontentSecurityPolicyは無効にしている。
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // CORS(Cross-Origin Resource Sharing): ブラウザは標準では「今開いているページと
 // 別のオリジン(ドメイン+ポート)」への通信をブロックする。フロントエンド(localhost:5173)から
