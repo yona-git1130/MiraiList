@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { Header } from "../components/Header";
 import { ReactionBar } from "../components/ReactionBar";
 import { UserIcon } from "../components/UserIcon";
@@ -134,12 +133,9 @@ export function Ranking() {
                         {tag.icon} {tag.name}
                       </span>
                     ))}
-                    <Link
-                      to={`/posts/${entry.post_id}`}
-                      style={{ fontWeight: 700, textDecoration: "none", color: "inherit" }}
-                    >
-                      {entry.title}
-                    </Link>
+                    {/* みんなのリストのカードはリアクション・(管理者のみ)削除以外の操作を持たせない
+                        方針のため、タイトルを押しても画面遷移はしない(リンクではなくただの文字列) */}
+                    <span style={{ fontWeight: 700 }}>{entry.title}</span>
                   </div>
                   {/* 削除ボタンは管理者にだけ表示する */}
                   {user?.role === "admin" && (

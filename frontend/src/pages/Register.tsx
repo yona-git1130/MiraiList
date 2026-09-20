@@ -118,7 +118,16 @@ export function Register() {
             </button>
           </form>
           <p className="muted-text" style={{ marginTop: 16, textAlign: "center" }}>
-            アカウントをお持ちの方は <Link to="/login">こちら</Link>
+            {/* 登録処理中に押されて画面遷移してしまわないよう、送信中は非活性にする */}
+            アカウントをお持ちの方は{" "}
+            <Link
+              to="/login"
+              className={submitting ? "link-disabled" : undefined}
+              aria-disabled={submitting}
+              onClick={(e) => submitting && e.preventDefault()}
+            >
+              こちら
+            </Link>
           </p>
         </div>
       </main>
