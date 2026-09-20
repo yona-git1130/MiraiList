@@ -1,0 +1,18 @@
+name: Keep Backend Warm
+
+# Renderの無料プランは15分ほどアクセスがないとサーバーがスリープし、
+# 次のアクセスで起動し直すまでに数十秒かかってしまう。
+# それを防ぐため、定期的にヘルスチェックAPIを叩いてサーバーを起きたままにする。
+on:
+  schedule:
+    - cron: "*/10 * * * *" # 10分おき(GitHub Actions側の遅延で多少ずれることはある)
+  workflow_dispatch: # 手動実行もできるようにしておく
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ヘルスチェックAPIを叩く
+        run: |
+          curl -sf https://idea-no-tane.onrender.com/api/health \
+            || echo "ping失敗(サーバーがちょうど起動中だった可能性があります)"
