@@ -5,6 +5,7 @@ import {
   findUserByEmail,
   findUserById,
   listUsers,
+  markOnboardingSeen,
   setUserStatus,
   setUserRole,
   updatePassword,
@@ -73,6 +74,16 @@ export async function updateMe(req: Request, res: Response) {
 
   const updated = await updateProfile(me.id, { username, email });
   res.json({ user: toPublicUser(updated!) });
+}
+
+/**
+ * 初回ログイン向けオンボーディング(ヘッダーのツールチップ説明)を見終わったことを記録するAPI
+ * (PATCH /api/users/me/onboarding、要ログイン)。ツールチップの「スキップ」「完了」どちらでも呼ぶ。
+ * @returns 204: 記録成功
+ */
+export async function completeOnboarding(req: Request, res: Response) {
+  await markOnboardingSeen(req.user!.id);
+  res.status(204).send();
 }
 
 /**

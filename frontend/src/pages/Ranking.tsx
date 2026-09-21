@@ -12,7 +12,7 @@ import type { RankingEntry } from "../types/ranking";
 import type { Tag } from "../types/tag";
 
 /**
- * みんなのリスト画面。全ユーザーの公開投稿を一覧表示し、タグ・達成状況で絞り込める。
+ * みんなのリスト画面。全ユーザーの公開投稿を新着順に一覧表示し、タグ・達成状況で絞り込める。
  * 他人の投稿にはリアクションできるが、自分の投稿は件数バッジだけの表示になる。
  * 管理者は投稿をここから直接ソフトデリートできる。
  */
@@ -111,21 +111,17 @@ export function Ranking() {
         )}
 
         <ol style={{ padding: 0, listStyle: "none", margin: 0 }}>
-          {ranking.map((entry, index) => (
+          {ranking.map((entry) => (
             <li key={entry.post_id} className={`rank-item${entry.is_achieved ? " achieved" : ""}`}>
-              <span className="rank-number">{index + 1}</span>
+              {/* 操作はできないので、リスト一覧のボタンと違いbuttonではなくバッジ(span)で表示のみ行う */}
+              {entry.is_achieved && (
+                <span className="achieve-btn achieved" style={{ display: "inline-flex", flexShrink: 0 }}>
+                  🎉達成
+                </span>
+              )}
               {/* minWidth: 0 がないと、中の横一列(タグ・リアクション等)に押されて
                   このflexアイテム自体がカードの幅からはみ出してしまう */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                {/* 操作はできないので、リスト一覧のボタンと違いbuttonではなくバッジ(span)で表示のみ行う */}
-                {entry.is_achieved && (
-                  <span
-                    className="achieve-btn achieved"
-                    style={{ display: "inline-flex", marginBottom: 8 }}
-                  >
-                    🎉達成
-                  </span>
-                )}
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                   <div className="tag-title-row" style={{ marginBottom: 0 }}>
                     {entry.tags.map((tag) => (

@@ -26,6 +26,7 @@ function createUserRow(overrides: Partial<UserRow> = {}): UserRow {
     role: "user",
     status: "active",
     created_at: new Date(),
+    has_seen_onboarding: true,
     ...overrides,
   };
 }

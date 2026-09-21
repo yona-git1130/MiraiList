@@ -774,16 +774,6 @@ fieldset.tag-fieldset legend {
   border-color: var(--celebrate-card);
 }
 
-.rank-number {
-  font-size: 20px;
-  font-weight: 700;
-  width: 32px;
-  text-align: center;
-  /* 上位・それ以外で色を分けず、順位の数字はすべて紫に統一する */
-  color: var(--accent-ink);
-  font-variant-numeric: tabular-nums;
-}
-
 .rank-excerpt {
   margin: 4px 0 0;
   font-size: 13px;
@@ -996,4 +986,42 @@ table.admin-table {
   resize: vertical;
   margin-bottom: 16px;
   font-family: inherit;
+}
+
+/* ==========================================================================
+   初回ログイン向けオンボーディングツアー(ヘッダーのツールチップ説明)
+   ========================================================================== */
+/* 説明中の要素を切り抜いたように見せる枠。box-shadowの広がり(9999px)を使うことで、
+   別途オーバーレイ要素を用意しなくても「対象の周りだけ薄暗くしない」効果を出している */
+.onboarding-highlight {
+  position: fixed;
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(33, 31, 46, 0.45), 0 0 0 3px var(--select);
+  pointer-events: none;
+  z-index: 100;
+  transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+
+.onboarding-tooltip {
+  position: fixed;
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 16px;
+  max-width: 260px;
+  box-shadow: 0 8px 24px rgba(20, 18, 33, 0.2);
+  z-index: 101;
+}
+
+.onboarding-tooltip-text {
+  margin: 0 0 14px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.onboarding-tooltip-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
 }

@@ -47,10 +47,10 @@ export async function deleteReaction(req: Request, res: Response) {
 }
 
 /**
- * みんなのリスト(リアクション数ランキング)を取得するAPI(GET /api/posts/ranking、ログイン不要)。
+ * みんなのリスト(全ユーザーの公開投稿、新着順)を取得するAPI(GET /api/posts/ranking、ログイン不要)。
  * @param req.query.tagId 指定するとそのタグの投稿だけに絞り込む(省略時は全タグ対象)
  * @param req.query.achieved "true"なら達成済みの投稿だけに絞り込む
- * @returns ランキング一覧(非公開投稿・管理者削除済みの投稿は除外される)
+ * @returns 新着順の一覧(非公開投稿・管理者削除済みの投稿は除外される)
  */
 export async function getRanking(req: Request, res: Response) {
   // tagId省略時は「すべて」タブとして、タグを問わず全投稿を対象にする

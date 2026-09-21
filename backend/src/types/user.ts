@@ -7,6 +7,7 @@ export type UserRow = {
   role: "user" | "admin";
   status: "active" | "suspended";
   created_at: Date;
+  has_seen_onboarding: boolean;
 };
 
 // APIのレスポンスとして外部に返してよい形。password_hash を含めないことで

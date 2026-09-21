@@ -6,8 +6,15 @@ import {
   adminSetUserStatus,
   adminSetUserPassword,
   adminSetUserRole,
+  completeOnboarding,
 } from "./userController";
-import { findUserById, setUserStatus, setUserRole, updatePassword } from "../repositories/userRepository";
+import {
+  findUserById,
+  setUserStatus,
+  setUserRole,
+  updatePassword,
+  markOnboardingSeen,
+} from "../repositories/userRepository";
 import type { UserRow } from "../types/user";
 
 vi.mock("bcrypt");
@@ -30,6 +37,7 @@ function createUserRow(overrides: Partial<UserRow> = {}): UserRow {
     role: "user",
     status: "active",
     created_at: new Date(),
+    has_seen_onboarding: true,
     ...overrides,
   };
 }
@@ -201,6 +209,18 @@ describe("adminSetUserPassword", () => {
 
     expect(bcrypt.hash).toHaveBeenCalledWith("password123", 10);
     expect(updatePassword).toHaveBeenCalledWith(2, "new-hashed");
+    expect(res.status).toHaveBeenCalledWith(204);
+  });
+});
+
+describe("completeOnboarding", () => {
+  it("自分自身のidでmarkOnboardingSeenを呼び、204を返す", async () => {
+    const req = { user: { id: 1, role: "user" } } as unknown as Request;
+    const res = createMockRes();
+
+    await completeOnboarding(req, res);
+
+    expect(markOnboardingSeen).toHaveBeenCalledWith(1);
     expect(res.status).toHaveBeenCalledWith(204);
   });
 });

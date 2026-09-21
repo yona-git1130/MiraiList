@@ -14,7 +14,8 @@ CREATE TABLE users (
   password_hash TEXT NOT NULL,
   role user_role NOT NULL DEFAULT 'user',
   status user_status NOT NULL DEFAULT 'active',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  has_seen_onboarding BOOLEAN NOT NULL DEFAULT true
 );
 
 -- tags

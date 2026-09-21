@@ -32,7 +32,7 @@ export async function deleteReaction(params: { postId: number; userId: number })
 }
 
 /**
- * みんなのリスト用に、リアクション総数(種類は問わない)の多い順で投稿を取得する。
+ * みんなのリスト用に、投稿日時が新しい順で投稿を取得する。
  * LEFT JOINなので、リアクションが1件も付いていない投稿も(件数すべて0として)一覧には残る。
  * カードと同じ「種類ごとの絵文字+件数」で表示できるよう、種類別の内訳(counts)も
  * 1回のクエリでまとめて取得する。
@@ -40,7 +40,7 @@ export async function deleteReaction(params: { postId: number; userId: number })
  *   「すべて」タブ用に、タグを問わず全投稿を対象にする
  * @param limit 取得件数の上限
  * @param achievedOnly trueなら達成済みの投稿だけに絞り込む
- * @returns 合計リアクション数の多い順に並んだランキング一覧
+ * @returns 新着順に並んだ一覧
  */
 export async function getRanking(
   tagId: number | undefined,
@@ -102,7 +102,7 @@ export async function getRanking(
      LEFT JOIN tags t ON t.id = pt.tag_id
      ${where}
      GROUP BY p.id, u.id
-     ORDER BY (SELECT COUNT(*) FROM reactions r2 WHERE r2.post_id = p.id) DESC
+     ORDER BY p.created_at DESC
      LIMIT ${limitPlaceholder}`,
     values
   );

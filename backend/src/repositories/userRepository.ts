@@ -32,6 +32,8 @@ export async function findUserById(id: number): Promise<UserRow | null> {
 
 /**
  * ユーザーを新規作成する。role/statusはDB側のデフォルト("user"/"active")になる。
+ * has_seen_onboardingは、既存ユーザー向けのデフォルト(true)とは逆に、
+ * 新規登録時だけ明示的にfalseにする(初回ログイン時にオンボーディングを見せるため)。
  * @param params.passwordHash bcryptで生成済みのハッシュ値(生パスワードは受け取らない)
  * @returns 作成した行
  */
@@ -41,8 +43,8 @@ export async function createUser(params: {
   passwordHash: string;
 }): Promise<UserRow> {
   const result = await pool.query<UserRow>(
-    `INSERT INTO users (username, email, password_hash)
-     VALUES ($1, $2, $3)
+    `INSERT INTO users (username, email, password_hash, has_seen_onboarding)
+     VALUES ($1, $2, $3, false)
      RETURNING *`, // RETURNING * で、作成した行をそのまま受け取れる
     [params.username, params.email, params.passwordHash]
   );
@@ -119,4 +121,12 @@ export async function setUserRole(id: number, role: "user" | "admin"): Promise<U
     [role, id]
   );
   return result.rows[0] ?? null;
+}
+
+/**
+ * 初回ログイン向けオンボーディング(ヘッダーのツールチップ説明)を見終わったことを記録する。
+ * 一度trueにしたら、以後どの端末からログインしても再表示されない。
+ */
+export async function markOnboardingSeen(id: number): Promise<void> {
+  await pool.query("UPDATE users SET has_seen_onboarding = true WHERE id = $1", [id]);
 }

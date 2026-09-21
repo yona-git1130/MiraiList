@@ -40,3 +40,8 @@ export function updateMeRequest(params: {
     body: JSON.stringify(params),
   });
 }
+
+/** 初回ログイン向けオンボーディング(ヘッダーのツールチップ説明)を見終わったことを記録する。 */
+export function completeOnboardingRequest() {
+  return apiFetch<void>("/users/me/onboarding", { method: "PATCH" });
+}

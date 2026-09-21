@@ -11,8 +11,8 @@ export type RankingTag = {
   icon: string;
 };
 
-// タグ別ランキング1件分。みんなのタネ画面のカードと同じ「種類ごとの絵文字+件数」で
-// 表示できるよう、種類別の内訳(counts)を持たせている。並び順は合計件数の多い順。
+// みんなのリスト1件分。カードと同じ「種類ごとの絵文字+件数」で
+// 表示できるよう、種類別の内訳(counts)を持たせている。並び順は投稿日時が新しい順。
 export type RankingEntry = {
   post_id: number;
   title: string;

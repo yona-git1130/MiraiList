@@ -6,4 +6,5 @@ export type User = {
   role: "user" | "admin";
   status: "active" | "suspended";
   created_at: string;
+  has_seen_onboarding: boolean;
 };

@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getMe,
   updateMe,
+  completeOnboarding,
   adminListUsers,
   adminDeleteUser,
   adminSetUserStatus,
@@ -14,6 +15,7 @@ export const userRouter = Router();
 
 userRouter.get("/me", requireAuth, getMe); // requireAuth を経由してからでないと getMe に到達しない
 userRouter.patch("/me", requireAuth, updateMe);
+userRouter.patch("/me/onboarding", requireAuth, completeOnboarding);
 
 // ここから下は管理者専用。requireAuthでログインを確認したあと、requireAdminでroleをチェックする
 userRouter.get("/", requireAuth, requireAdmin, adminListUsers);

@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { User } from "../types/user";
 import { getToken, setToken, clearToken } from "../api/token";
-import { loginRequest, registerRequest, fetchMe, updateMeRequest } from "../api/auth";
+import { loginRequest, registerRequest, fetchMe, updateMeRequest, completeOnboardingRequest } from "../api/auth";
 
 type AuthContextValue = {
   user: User | null;
@@ -16,6 +16,7 @@ type AuthContextValue = {
     currentPassword?: string;
     newPassword?: string;
   }) => Promise<void>;
+  completeOnboarding: () => void;
 };
 
 // Context: 「ログイン中のユーザー情報」のように複数の画面から使いたい状態を、
@@ -82,8 +83,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user); // 画面上のユーザー名などをすぐに反映する
   }
 
+  /**
+   * 初回ログイン向けオンボーディング(ヘッダーのツールチップ説明)を閉じたときに呼ぶ。
+   * 画面上はすぐにツールチップを消したいので、APIの完了を待たずに先にuserを更新する。
+   * (失敗しても実害は小さい: 次回ログイン時にもう一度ツールチップが出るだけ)
+   */
+  function completeOnboarding() {
+    setUser((prev) => (prev ? { ...prev, has_seen_onboarding: true } : prev));
+    completeOnboardingRequest().catch(() => {
+      // 記録に失敗しても画面上は既に閉じているので、ここでは何もしない
+    });
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, logout, updateProfile, completeOnboarding }}
+    >
       {children}
     </AuthContext.Provider>
   );
