@@ -158,9 +158,19 @@ npm run dev
 
 `.github/workflows/ci.yml` により、`main` ブランチへのpush・向けのPull Requestのたびに、バックエンド・フロントエンドそれぞれで型チェック(`tsc`)・ユニットテスト(`vitest`)・ビルドを自動実行しています。
 
-## DBバックアップ(手動)
+## DBバックアップ
 
-Supabaseの無料プランには自動バックアップがないため、必要に応じて手動でバックアップを取ります。`psql`/`pg_dump`(PostgreSQLクライアントツール)がローカルにインストールされている前提です。
+### 自動(GitHub Actions)
+
+`.github/workflows/db-backup.yml` により、毎日1回(日本時間 朝3:00)自動でバックアップを取り、GitHub Actionsの成果物(Artifact)として30日間保存しています。
+
+- 有効にするには、リポジトリの `Settings` → `Secrets and variables` → `Actions` → `New repository secret` で、`DATABASE_URL` という名前でSupabaseの接続文字列を登録してください(値はRenderの`DATABASE_URL`と同じもので構いません)
+- バックアップをダウンロードするには、GitHubの `Actions` タブ → `DB Backup` → 該当の実行 → 画面下部の `Artifacts` からダウンロードできます
+- 手動で今すぐ実行したい場合は、同じ画面の `Run workflow` ボタンから実行できます
+
+### 手動
+
+自動バックアップとは別に、必要なタイミングで手動でもバックアップを取れます。`psql`/`pg_dump`(PostgreSQLクライアントツール)がローカルにインストールされている前提です。
 
 1. Supabaseダッシュボードの Project Settings → Database から接続文字列(Connection string, URI形式)をコピーする
 2. ターミナルでダンプを取得する

@@ -1,0 +1,29 @@
+name: DB Backup
+
+# Supabaseの無料プランには自動バックアップがないため、GitHub Actionsで毎日
+# pg_dump を実行し、その結果をワークフローの成果物(Artifact)として保存する。
+# 実行には、リポジトリの Settings > Secrets and variables > Actions で
+# DATABASE_URL という名前のSecretを登録しておく必要がある(値はSupabaseの接続文字列)。
+on:
+  schedule:
+    - cron: "0 18 * * *" # 毎日 UTC 18:00 (日本時間 朝3:00)
+  workflow_dispatch: # 手動実行もできるようにしておく
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PostgreSQLクライアントをインストール
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: pg_dumpでバックアップを取得
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pg_dump "$DATABASE_URL" -F c -f backup.dump
+
+      - name: バックアップをArtifactとして保存(30日間保持)
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: backup.dump
+          retention-days: 30

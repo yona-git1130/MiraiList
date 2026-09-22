@@ -12,6 +12,8 @@ import { AccountEdit } from "./pages/AccountEdit";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { NotFound } from "./pages/NotFound";
+import { PrivacyPolicy } from "./pages/PrivacyPolicy";
+import { Footer } from "./components/Footer";
 
 /** アプリのルート。ルーティング(BrowserRouter)と認証状態(AuthProvider)を全体に提供する。 */
 function App() {
@@ -37,76 +39,80 @@ function AppRoutes() {
   }
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <RequireAuth>
-            <PostList />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/posts/new"
-        element={
-          <RequireAuth>
-            <PostForm />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/posts/:id"
-        element={
-          <RequireAuth>
-            <PostDetail />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/posts/:id/edit"
-        element={
-          <RequireAuth>
-            <PostForm />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/posts/:id/edit-comment"
-        element={
-          <RequireAuth>
-            <PostCommentEdit />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/ranking"
-        element={
-          <RequireAuth>
-            <Ranking />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/account"
-        element={
-          <RequireAuth>
-            <AccountEdit />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <RequireAdmin>
-            <AdminUsers />
-          </RequireAdmin>
-        }
-      />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      {/* どのパスにも一致しなかった場合の受け皿。必ず一番最後に書く */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <RequireAuth>
+              <PostList />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/posts/new"
+          element={
+            <RequireAuth>
+              <PostForm />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/posts/:id"
+          element={
+            <RequireAuth>
+              <PostDetail />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/posts/:id/edit"
+          element={
+            <RequireAuth>
+              <PostForm />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/posts/:id/edit-comment"
+          element={
+            <RequireAuth>
+              <PostCommentEdit />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/ranking"
+          element={
+            <RequireAuth>
+              <Ranking />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/account"
+          element={
+            <RequireAuth>
+              <AccountEdit />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <RequireAdmin>
+              <AdminUsers />
+            </RequireAdmin>
+          }
+        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        {/* どのパスにも一致しなかった場合の受け皿。必ず一番最後に書く */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Footer />
+    </>
   );
 }
 

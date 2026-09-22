@@ -10,6 +10,7 @@ import {
 } from "../controllers/postController";
 import { getRanking } from "../controllers/reactionController";
 import { requireAuth, requireActive } from "../middleware/authMiddleware";
+import { writeRateLimiter } from "../middleware/rateLimiter";
 import { postCommentsRouter } from "./commentRoutes";
 import { postReactionsRouter } from "./reactionRoutes";
 
@@ -21,11 +22,17 @@ postRouter.get("/ranking", getRanking);
 
 postRouter.get("/", requireAuth, listPosts); // 「リスト一覧」は自分の投稿のみを返すため、ログイン必須にする
 postRouter.get("/:id", getPost);
-postRouter.post("/", requireAuth, requireActive, createPost);
-postRouter.put("/:id", requireAuth, requireActive, updatePost);
-postRouter.delete("/:id", requireAuth, requireActive, deletePost);
-postRouter.patch("/:id/achieved", requireAuth, requireActive, setAchieved);
-postRouter.patch("/:id/achievement-comment", requireAuth, requireActive, setAchievementComment);
+postRouter.post("/", requireAuth, requireActive, writeRateLimiter, createPost);
+postRouter.put("/:id", requireAuth, requireActive, writeRateLimiter, updatePost);
+postRouter.delete("/:id", requireAuth, requireActive, writeRateLimiter, deletePost);
+postRouter.patch("/:id/achieved", requireAuth, requireActive, writeRateLimiter, setAchieved);
+postRouter.patch(
+  "/:id/achievement-comment",
+  requireAuth,
+  requireActive,
+  writeRateLimiter,
+  setAchievementComment
+);
 
 postRouter.use("/:id/comments", postCommentsRouter);
 postRouter.use("/:id/reactions", postReactionsRouter);

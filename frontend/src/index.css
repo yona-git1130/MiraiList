@@ -1025,3 +1025,16 @@ table.admin-table {
   align-items: center;
   gap: 8px;
 }
+
+/* ==========================================================================
+   フッター
+   ========================================================================== */
+.site-footer {
+  text-align: center;
+  padding: 24px 20px;
+  font-size: 12px;
+}
+
+.site-footer a {
+  color: var(--muted);
+}
