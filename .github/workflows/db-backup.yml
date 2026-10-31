@@ -33,9 +33,25 @@ jobs:
           "$PG_DUMP" --version
           "$PG_DUMP" "$DATABASE_URL" -F c -f backup.dump
 
-      - name: バックアップをArtifactとして保存(30日間保持)
+      # このリポジトリは公開(PUBLIC)のため、Artifactは「GitHubにログインした人なら誰でも」
+      # ダウンロードできる。バックアップにはメールアドレス・パスワードのハッシュ・非公開の投稿など
+      # が入っているので、必ず暗号化してから保存する。
+      # 合言葉(BACKUP_PASSPHRASE)が未設定のときは、暗号化せずに保存してしまわないよう中止する。
+      - name: バックアップを暗号化する
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::Secret BACKUP_PASSPHRASE が未設定です。暗号化せずに保存するのは危険なので中止します"
+            exit 1
+          fi
+          openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt \
+            -in backup.dump -out backup.dump.enc -pass env:BACKUP_PASSPHRASE
+          rm backup.dump
+
+      - name: 暗号化したバックアップをArtifactとして保存(30日間保持)
         uses: actions/upload-artifact@v4
         with:
           name: db-backup-${{ github.run_id }}
-          path: backup.dump
+          path: backup.dump.enc
           retention-days: 30

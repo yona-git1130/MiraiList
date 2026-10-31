@@ -162,11 +162,24 @@ npm run dev
 
 ### 自動(GitHub Actions)
 
-`.github/workflows/db-backup.yml` により、毎日1回(日本時間 朝3:00)自動でバックアップを取り、GitHub Actionsの成果物(Artifact)として30日間保存しています。
+`.github/workflows/db-backup.yml` により、毎日1回(日本時間 朝3:00)自動でバックアップを取り、**暗号化したうえで**GitHub Actionsの成果物(Artifact)として30日間保存しています。
 
-- 有効にするには、リポジトリの `Settings` → `Secrets and variables` → `Actions` → `New repository secret` で、`DATABASE_URL` という名前でSupabaseの接続文字列を登録してください(値はRenderの`DATABASE_URL`と同じもので構いません)
-- バックアップをダウンロードするには、GitHubの `Actions` タブ → `DB Backup` → 該当の実行 → 画面下部の `Artifacts` からダウンロードできます
+> このリポジトリは公開(PUBLIC)で、Artifactは「GitHubにログインした人なら誰でも」ダウンロードできます。バックアップにはメールアドレス・パスワードのハッシュ・非公開の投稿などが含まれるため、必ず暗号化してから保存する作りにしています。
+
+- 有効にするには、リポジトリの `Settings` → `Secrets and variables` → `Actions` → `New repository secret` で、次の2つを登録してください
+  - `DATABASE_URL`: Supabaseの接続文字列(Renderの`DATABASE_URL`と同じもので構いません。ポートは`5432`)
+  - `BACKUP_PASSPHRASE`: バックアップを暗号化する合言葉。`openssl rand -base64 32` などで長いランダムな文字列を作り、**パスワード管理アプリなど、GitHub以外の安全な場所にも必ず控えてください**(なくすとバックアップを復元できません)。未設定のままだと、暗号化せずに保存してしまうことを防ぐため、バックアップは失敗します
+- バックアップをダウンロードするには、GitHubの `Actions` タブ → `DB Backup` → 該当の実行 → 画面下部の `Artifacts` からダウンロードできます(`backup.dump.enc`という暗号化ファイルが入っています)
 - 手動で今すぐ実行したい場合は、同じ画面の `Run workflow` ボタンから実行できます
+- 復元するときは、先に暗号を解いてから `pg_restore` に渡します
+
+  ```bash
+  BACKUP_PASSPHRASE='控えておいた合言葉' openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in backup.dump.enc -out backup.dump -pass env:BACKUP_PASSPHRASE
+  ```
+
+  ```bash
+  pg_restore --clean --if-exists -d "<復元先の接続文字列>" backup.dump
+  ```
 
 ### 手動
 
