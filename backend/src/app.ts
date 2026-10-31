@@ -14,6 +14,13 @@ import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
 
+// 本番(Render)では、アプリの手前にリバースプロキシ(中継サーバー)があり、アクセス元のIPは
+// X-Forwarded-For ヘッダーに入って届く。これを設定しないと req.ip が常に中継サーバーのIPに
+// なってしまい、IPごとのレート制限が「全ユーザーまとめて1つ」として数えられてしまう。
+// 信頼する段数は1に留める。多く指定しすぎると、攻撃者が偽のIPを送ってレート制限を
+// 回避できてしまうため(段数が分からないうちは、少なめにするのが安全)。
+app.set("trust proxy", 1);
+
 // helmet: HSTS・X-Content-Type-Options・X-Frame-Optionsなど、
 // セキュリティ関連のレスポンスヘッダーをまとめて適切な値に設定してくれるミドルウェア。
 // このAPIはブラウザから直接HTMLとして表示されることはないので、
