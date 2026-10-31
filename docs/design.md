@@ -183,17 +183,17 @@ posts (N) ── (N) tags   ※ post_tags を介して
 ### 投稿
 | メソッド | パス | 説明 | 認証 |
 |---|---|---|---|
-| GET | /api/posts | 投稿一覧（タグ絞り込み対応） | 不要 |
-| GET | /api/posts/:id | 投稿詳細 | 不要 |
+| GET | /api/posts | 投稿一覧（自分の投稿のみ。タグ絞り込み対応） | 要ログイン |
+| GET | /api/posts/:id | 投稿詳細（非公開・管理者削除済みは本人と管理者のみ） | 要ログイン |
 | POST | /api/posts | 投稿作成 | 要ログイン・要active |
 | PUT | /api/posts/:id | 投稿編集 | 本人 or 管理者 |
 | DELETE | /api/posts/:id | 投稿削除 | 本人 or 管理者 |
-| GET | /api/posts/ranking | リアクションランキング取得 | 不要 |
+| GET | /api/posts/ranking | みんなのリスト取得（現在は新着順） | 要ログイン |
 
 ### コメント
 | メソッド | パス | 説明 | 認証 |
 |---|---|---|---|
-| GET | /api/posts/:id/comments | コメント一覧 | 不要 |
+| GET | /api/posts/:id/comments | コメント一覧（見られる投稿のみ） | 要ログイン |
 | POST | /api/posts/:id/comments | コメント投稿 | 要ログイン・要active |
 | DELETE | /api/comments/:id | コメント削除 | 本人 or 管理者 |
 

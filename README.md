@@ -10,7 +10,7 @@ React (Vite) のSPAフロントエンドと、Node.js + Express + PostgreSQLのR
 
 - **投稿(リスト)の作成・編集・削除**
   - タイトル・コメント・タグ(🔥絶対実現 / 💪挑戦 / ✨楽しみ / 🌱できたらいいな)
-  - 「マイリストにだけ表示」を選ぶと、みんなのリストには公開せず自分だけが見られる非公開投稿にできる
+  - 「マイリストにだけ表示」を選ぶと、みんなのリストには公開せず自分だけが見られる非公開投稿にできる(管理者を含め、他の人は画面からもAPIからも閲覧・編集・削除できない)
 - **達成機能**
   - 「達成」ボタンで投稿を達成済みにできる(一度達成にすると取り消し不可)
   - 達成直後に感想を入力するモーダルが表示され、感想はみんなのリストにも表示される
@@ -174,8 +174,10 @@ npm run dev
 - 復元するときは、先に暗号を解いてから `pg_restore` に渡します
 
   ```bash
-  BACKUP_PASSPHRASE='控えておいた合言葉' openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in backup.dump.enc -out backup.dump -pass env:BACKUP_PASSPHRASE
+  openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in backup.dump.enc -out backup.dump
   ```
+
+  実行すると合言葉(`BACKUP_PASSPHRASE`に設定したもの)を聞かれるので入力します(入力した文字は画面に表示されません)。復号した`backup.dump`は暗号化されていないので、使い終わったら必ず削除してください。
 
   ```bash
   pg_restore --clean --if-exists -d "<復元先の接続文字列>" backup.dump

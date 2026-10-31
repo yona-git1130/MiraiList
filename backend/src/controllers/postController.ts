@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import * as postRepository from "../repositories/postRepository";
 import { listTags } from "../repositories/tagRepository";
+import { canViewPost } from "../types/post";
 
 // リクエストで送られてきたタグID配列のうち、実在するタグだけを残す。
 // 存在しないIDが1つでも混ざっていたらエラーにする(不正なデータがDBに入るのを防ぐ)。
@@ -38,12 +39,15 @@ export async function listPosts(req: Request, res: Response) {
 }
 
 /**
- * 投稿詳細を取得するAPI(GET /api/posts/:id、ログイン不要)。
- * @returns 200: 投稿詳細(リアクション件数込み) / 404: 存在しない投稿
+ * 投稿詳細を取得するAPI(GET /api/posts/:id、要ログイン)。
+ * 非公開の投稿は投稿者本人以外(管理者も含む)、管理者に削除された投稿は投稿者本人と管理者以外には、
+ * 存在しないものとして扱う。
+ * (403ではなく404を返すのは、「その投稿が存在すること」自体を他人に知らせないため)
+ * @returns 200: 投稿詳細(リアクション件数込み) / 404: 存在しない投稿、または見る権限がない投稿
  */
 export async function getPost(req: Request, res: Response) {
   const post = await postRepository.findPostById(Number(req.params.id));
-  if (!post) {
+  if (!post || !canViewPost(post, req.user)) {
     return res.status(404).json({ error: "投稿が見つかりません" });
   }
   // reaction_counts は findPostById の時点で既に含まれている
@@ -89,14 +93,15 @@ export async function createPost(req: Request, res: Response) {
 }
 
 /**
- * 投稿を編集するAPI(PUT /api/posts/:id、投稿者本人 or 管理者)。
+ * 投稿を編集するAPI(PUT /api/posts/:id、投稿者本人 or 管理者。ただし他人の非公開投稿は管理者も不可)。
  * createPostと同じ項目一式(title/body/tagIds/isPrivate)を丸ごと上書きする。
  * @returns 200: 更新後の投稿 / 403: 本人でも管理者でもない / 404: 存在しない投稿
  */
 export async function updatePost(req: Request, res: Response) {
   const id = Number(req.params.id);
   const post = await postRepository.findPostById(id);
-  if (!post) {
+  // 他人の非公開投稿は、管理者であっても存在しないものとして扱う(見ることも、編集・削除もできない)
+  if (!post || !canViewPost(post, req.user)) {
     return res.status(404).json({ error: "投稿が見つかりません" });
   }
   // 権限チェック: 投稿者本人 か 管理者 でなければ拒否する
@@ -146,7 +151,8 @@ export async function setAchieved(req: Request, res: Response) {
   }
 
   const post = await postRepository.findPostById(id);
-  if (!post) {
+  // 他人の非公開投稿は、管理者であっても存在しないものとして扱う(見ることも、編集・削除もできない)
+  if (!post || !canViewPost(post, req.user)) {
     return res.status(404).json({ error: "投稿が見つかりません" });
   }
   // 達成マークも投稿者本人(または管理者)だけが操作できる
@@ -179,7 +185,8 @@ export async function setAchievementComment(req: Request, res: Response) {
   }
 
   const post = await postRepository.findPostById(id);
-  if (!post) {
+  // 他人の非公開投稿は、管理者であっても存在しないものとして扱う(見ることも、編集・削除もできない)
+  if (!post || !canViewPost(post, req.user)) {
     return res.status(404).json({ error: "投稿が見つかりません" });
   }
   // 感想を書けるのも投稿者本人だけ
@@ -206,7 +213,8 @@ export async function setAchievementComment(req: Request, res: Response) {
 export async function deletePost(req: Request, res: Response) {
   const id = Number(req.params.id);
   const post = await postRepository.findPostById(id);
-  if (!post) {
+  // 他人の非公開投稿は、管理者であっても存在しないものとして扱う(見ることも、編集・削除もできない)
+  if (!post || !canViewPost(post, req.user)) {
     return res.status(404).json({ error: "投稿が見つかりません" });
   }
 

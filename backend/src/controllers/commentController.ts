@@ -1,13 +1,19 @@
 import { Request, Response } from "express";
 import * as commentRepository from "../repositories/commentRepository";
 import { findPostById } from "../repositories/postRepository";
+import { canViewPost } from "../types/post";
 
 /**
- * 投稿へのコメント一覧を取得するAPI(GET /api/posts/:id/comments、ログイン不要)。
- * @returns 投稿日時の昇順に並んだコメント一覧
+ * 投稿へのコメント一覧を取得するAPI(GET /api/posts/:id/comments、要ログイン)。
+ * 見る権限のない投稿(他人の非公開投稿など)のコメントは、存在しないものとして扱う。
+ * @returns 200: 投稿日時の昇順に並んだコメント一覧 / 404: 存在しない投稿、または見る権限がない投稿
  */
 export async function listComments(req: Request, res: Response) {
   const postId = Number(req.params.id);
+  const post = await findPostById(postId);
+  if (!post || !canViewPost(post, req.user)) {
+    return res.status(404).json({ error: "投稿が見つかりません" });
+  }
   const comments = await commentRepository.listCommentsByPost(postId);
   res.json({ comments });
 }
@@ -15,12 +21,12 @@ export async function listComments(req: Request, res: Response) {
 /**
  * 投稿にコメントを付けるAPI(POST /api/posts/:id/comments、要ログイン・要active)。
  * @param req.body.body コメント本文(必須)
- * @returns 201: 作成したコメント / 400: 本文未入力 / 404: 存在しない投稿
+ * @returns 201: 作成したコメント / 400: 本文未入力 / 404: 存在しない投稿、または見る権限がない投稿
  */
 export async function createComment(req: Request, res: Response) {
   const postId = Number(req.params.id);
   const post = await findPostById(postId);
-  if (!post) {
+  if (!post || !canViewPost(post, req.user)) {
     return res.status(404).json({ error: "投稿が見つかりません" });
   }
 
@@ -39,7 +45,7 @@ export async function createComment(req: Request, res: Response) {
 }
 
 /**
- * コメントを削除するAPI(DELETE /api/comments/:id、投稿者本人 or 管理者)。
+ * コメントを削除するAPI(DELETE /api/comments/:id、投稿者本人 or 管理者。ただし他人の非公開投稿のコメントは管理者も不可)。
  * @returns 204: 削除成功 / 403: 権限なし / 404: 存在しないコメント
  */
 export async function deleteComment(req: Request, res: Response) {
@@ -49,8 +55,15 @@ export async function deleteComment(req: Request, res: Response) {
     return res.status(404).json({ error: "コメントが見つかりません" });
   }
   // 権限チェック: コメント投稿者本人 か 管理者 でなければ拒否する
-  if (comment.author.id !== req.user!.id && req.user!.role !== "admin") {
-    return res.status(403).json({ error: "このコメントを削除する権限がありません" });
+  if (comment.author.id !== req.user!.id) {
+    if (req.user!.role !== "admin") {
+      return res.status(403).json({ error: "このコメントを削除する権限がありません" });
+    }
+    // 管理者でも、他人の非公開投稿に付いたコメントには手を出せない(存在しないものとして扱う)
+    const post = await findPostById(comment.post_id);
+    if (post && !canViewPost(post, req.user)) {
+      return res.status(404).json({ error: "コメントが見つかりません" });
+    }
   }
 
   await commentRepository.deleteComment(id);

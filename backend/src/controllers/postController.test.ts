@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
 import {
+  getPost,
   createPost,
   updatePost,
   setAchieved,
@@ -48,6 +49,157 @@ const TAGS = [
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(listTags).mockResolvedValue(TAGS);
+});
+
+describe("getPost", () => {
+  it("存在しない投稿は404を返す", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(null);
+    const req = { params: { id: "1" }, user: { id: 20, role: "user" } } as unknown as Request;
+    const res = createMockRes();
+
+    await getPost(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+  });
+
+  it("公開の投稿は、他のユーザーにも返す", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(createPostDetail());
+    const req = { params: { id: "1" }, user: { id: 20, role: "user" } } as unknown as Request;
+    const res = createMockRes();
+
+    await getPost(req, res);
+
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith({ post: expect.objectContaining({ id: 1 }) });
+  });
+
+  it("非公開の投稿は、他のユーザーには404を返し、中身を返さない", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(
+      createPostDetail({ is_private: true, title: "秘密のタイトル" })
+    );
+    const req = { params: { id: "1" }, user: { id: 20, role: "user" } } as unknown as Request;
+    const res = createMockRes();
+
+    await getPost(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(JSON.stringify(vi.mocked(res.json).mock.calls)).not.toContain("秘密のタイトル");
+  });
+
+  it("非公開の投稿でも、投稿者本人には返す", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(createPostDetail({ is_private: true }));
+    const req = { params: { id: "1" }, user: { id: 10, role: "user" } } as unknown as Request;
+    const res = createMockRes();
+
+    await getPost(req, res);
+
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith({ post: expect.objectContaining({ id: 1 }) });
+  });
+
+  it("他人の非公開投稿は、管理者であっても404を返す", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(
+      createPostDetail({ is_private: true, title: "秘密のタイトル" })
+    );
+    const req = { params: { id: "1" }, user: { id: 99, role: "admin" } } as unknown as Request;
+    const res = createMockRes();
+
+    await getPost(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(JSON.stringify(vi.mocked(res.json).mock.calls)).not.toContain("秘密のタイトル");
+  });
+
+  it("管理者に削除された投稿は、他のユーザーには404を返す", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(createPostDetail({ deleted_by_admin: true }));
+    const req = { params: { id: "1" }, user: { id: 20, role: "user" } } as unknown as Request;
+    const res = createMockRes();
+
+    await getPost(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+  });
+});
+
+describe("管理者でも、他人の非公開投稿は操作できない", () => {
+  const ADMIN = { id: 99, role: "admin" };
+  const privatePostOfOthers = () =>
+    createPostDetail({ is_private: true, author: { id: 10, username: "作者" } });
+
+  it("編集(updatePost)は404で、更新されない", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(privatePostOfOthers());
+    const req = {
+      params: { id: "1" },
+      user: ADMIN,
+      body: { title: "乗っ取り", body: "x", tagIds: [1] },
+    } as unknown as Request;
+    const res = createMockRes();
+
+    await updatePost(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(postRepository.updatePost).not.toHaveBeenCalled();
+  });
+
+  it("達成の操作(setAchieved)は404で、更新されない", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(privatePostOfOthers());
+    const req = { params: { id: "1" }, user: ADMIN, body: { achieved: true } } as unknown as Request;
+    const res = createMockRes();
+
+    await setAchieved(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(postRepository.setAchieved).not.toHaveBeenCalled();
+  });
+
+  it("達成コメントの保存(setAchievementComment)は404で、更新されない", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(
+      createPostDetail({ is_private: true, is_achieved: true, author: { id: 10, username: "作者" } })
+    );
+    const req = { params: { id: "1" }, user: ADMIN, body: { comment: "x" } } as unknown as Request;
+    const res = createMockRes();
+
+    await setAchievementComment(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(postRepository.setAchievementComment).not.toHaveBeenCalled();
+  });
+
+  it("削除(deletePost)は404で、完全削除も「削除済み」の印付けもされない", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(privatePostOfOthers());
+    const req = { params: { id: "1" }, user: ADMIN } as unknown as Request;
+    const res = createMockRes();
+
+    await deletePost(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(postRepository.deletePost).not.toHaveBeenCalled();
+    expect(postRepository.softDeleteByAdmin).not.toHaveBeenCalled();
+  });
+
+  it("公開の投稿なら、これまで通り管理者が削除(印付け)できる", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(
+      createPostDetail({ is_private: false, author: { id: 10, username: "作者" } })
+    );
+    const req = { params: { id: "1" }, user: ADMIN } as unknown as Request;
+    const res = createMockRes();
+
+    await deletePost(req, res);
+
+    expect(postRepository.softDeleteByAdmin).toHaveBeenCalledWith(1);
+    expect(res.status).toHaveBeenCalledWith(204);
+  });
+
+  it("投稿者本人が自分の非公開投稿を削除することは、これまで通りできる", async () => {
+    vi.mocked(postRepository.findPostById).mockResolvedValue(privatePostOfOthers());
+    const req = { params: { id: "1" }, user: { id: 10, role: "user" } } as unknown as Request;
+    const res = createMockRes();
+
+    await deletePost(req, res);
+
+    expect(postRepository.deletePost).toHaveBeenCalledWith(1);
+    expect(res.status).toHaveBeenCalledWith(204);
+  });
 });
 
 describe("createPost", () => {

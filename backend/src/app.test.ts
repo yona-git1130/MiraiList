@@ -2,6 +2,42 @@ import { describe, it, expect } from "vitest";
 import express from "express";
 import app from "./app";
 
+describe("ログインなしでのアクセス", () => {
+  // 画面側でログイン必須にしているだけでは、APIを直接叩かれると誰でも取得できてしまう。
+  // 投稿の中身を返すAPIは、サーバー側でも、ログインなしなら401で弾かれることを確かめる。
+  // (認証の確認はコントローラーの手前で行われるので、DBには一切アクセスしない)
+  const PROTECTED_GET_PATHS = [
+    "/api/posts/ranking", // みんなのリスト
+    "/api/posts/1", // 投稿1件
+    "/api/posts/1/comments", // コメント一覧
+    "/api/posts", // マイリスト
+  ];
+
+  for (const path of PROTECTED_GET_PATHS) {
+    it(`GET ${path} は、トークンなしだと401になる`, async () => {
+      const server = app.listen(0);
+      try {
+        const { port } = server.address() as { port: number };
+        const res = await fetch(`http://127.0.0.1:${port}${path}`);
+        expect(res.status).toBe(401);
+      } finally {
+        server.close();
+      }
+    });
+  }
+
+  it("ヘルスチェックは、トークンなしでも200になる(監視・スリープ防止用)", async () => {
+    const server = app.listen(0);
+    try {
+      const { port } = server.address() as { port: number };
+      const res = await fetch(`http://127.0.0.1:${port}/api/health`);
+      expect(res.status).toBe(200);
+    } finally {
+      server.close();
+    }
+  });
+});
+
 describe("app の trust proxy 設定", () => {
   it("中継サーバー1段分だけを信頼する設定になっている", () => {
     expect(app.get("trust proxy")).toBe(1);

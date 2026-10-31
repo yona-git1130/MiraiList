@@ -39,6 +39,21 @@ beforeEach(() => {
 });
 
 describe("upsertReaction", () => {
+  it("他人の非公開投稿にはリアクションできない(404)", async () => {
+    vi.mocked(findPostById).mockResolvedValue(createPostDetail({ is_private: true }));
+    const req = {
+      params: { id: "1" },
+      user: { id: 99, role: "user" },
+      body: { type: "like" },
+    } as unknown as Request;
+    const res = createMockRes();
+
+    await upsertReaction(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(reactionRepository.upsertReaction).not.toHaveBeenCalled();
+  });
+
   it("投稿が見つからなければ404を返す", async () => {
     vi.mocked(findPostById).mockResolvedValue(null);
     const req = {
