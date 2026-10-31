@@ -774,13 +774,6 @@ fieldset.tag-fieldset legend {
   border-color: var(--celebrate-card);
 }
 
-.rank-excerpt {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--muted);
-  white-space: pre-wrap;
-}
-
 /* ==========================================================================
    テーブル(管理者画面)
    ========================================================================== */

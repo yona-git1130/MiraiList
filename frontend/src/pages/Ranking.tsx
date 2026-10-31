@@ -130,8 +130,11 @@ export function Ranking() {
                       </span>
                     ))}
                     {/* みんなのリストのカードはリアクション・(管理者のみ)削除以外の操作を持たせない
-                        方針のため、タイトルを押しても画面遷移はしない(リンクではなくただの文字列) */}
-                    <span style={{ fontWeight: 700 }}>{entry.title}</span>
+                        方針のため、タイトルを押しても画面遷移はしない(リンクではなくただの文字列)。
+                        文字の大きさはマイリストのカード(.card-title)と揃える */}
+                    <span className="card-title" style={{ fontWeight: 700 }}>
+                      {entry.title}
+                    </span>
                   </div>
                   {/* 削除ボタンは管理者にだけ表示する */}
                   {user?.role === "admin" && (
@@ -144,7 +147,8 @@ export function Ranking() {
                     </button>
                   )}
                 </div>
-                <p className="rank-excerpt">{excerpt(entry.body, 60)}</p>
+                {/* 文字の大きさはマイリストのカード(.card-excerpt)と揃える */}
+                <p className="card-excerpt">{excerpt(entry.body, 60)}</p>
                 {/* 達成直後のモーダルで入力された感想。書かれている投稿だけ表示する */}
                 {entry.achievement_comment && (
                   <div className="achievement-comment">

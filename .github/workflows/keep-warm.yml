@@ -2,7 +2,8 @@ name: Keep Backend Warm
 
 # Renderの無料プランは15分ほどアクセスがないとサーバーがスリープし、
 # 次のアクセスで起動し直すまでに数十秒かかってしまう。
-# それを防ぐため、定期的にヘルスチェックAPIを叩いてサーバーを起きたままにする。
+# また、Supabaseの無料プランも一定期間DBへのアクセスがないとプロジェクトが一時停止する。
+# それを防ぐため、定期的にサーバーとDBの両方を叩いて起きたままにする。
 on:
   schedule:
     - cron: "*/10 * * * *" # 10分おき(GitHub Actions側の遅延で多少ずれることはある)
@@ -12,7 +13,15 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: ヘルスチェックAPIを叩く
+      - name: サーバーを起こす(ヘルスチェックAPI)
         run: |
-          curl -sf https://idea-no-tane.onrender.com/api/health \
+          curl -sf --max-time 90 https://idea-no-tane.onrender.com/api/health \
             || echo "ping失敗(サーバーがちょうど起動中だった可能性があります)"
+
+      # DBを実際に参照するAPIを叩いて、Supabaseを「利用中」の状態に保つ。
+      # サーバーの起動待ちで一度失敗しても通るようリトライし、それでも失敗した場合は
+      # このワークフロー自体を失敗させる(GitHubからの失敗通知メールで異常に気づける)。
+      - name: DBに繋がることを確認する(タグ一覧API)
+        run: |
+          curl -sf --max-time 90 --retry 3 --retry-delay 20 --retry-all-errors \
+            https://idea-no-tane.onrender.com/api/tags > /dev/null
