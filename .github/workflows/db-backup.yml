@@ -15,10 +15,13 @@ jobs:
     steps:
       # pg_dump は、接続先のDBサーバーより古いバージョンだと「バージョン不一致」で拒否される。
       # (新しい pg_dump で古いDBをダンプするのは問題ない)
-      # ランナー標準の古い pg_dump ではなく、新しいクライアントを入れて、一番新しいものを使う。
+      # ランナー標準の古い pg_dump(Ubuntu標準は16)ではなく、新しいクライアントを入れて使う。
+      # Ubuntu標準のパッケージ置き場には16までしかないため、まずPostgreSQL公式の
+      # パッケージ置き場(PGDG)を追加してから、新しいクライアントをインストールする。
       - name: PostgreSQLクライアントをインストール
         run: |
-          sudo apt-get update
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install -y postgresql-client-18 || sudo apt-get install -y postgresql-client-17
 
       - name: pg_dumpでバックアップを取得
