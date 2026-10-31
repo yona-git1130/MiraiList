@@ -1,11 +1,23 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Header } from "../components/Header";
 
 /**
  * プライバシーポリシー・利用規約のまとめページ。個人開発の小規模アプリ向けに、
  * 何のデータをどう扱っているかを平易な言葉でまとめたもの(法律の専門文書ではない)。
  * ログイン不要で誰でも閲覧できる。
+ * `/privacy#contact` のようにURLの末尾に#名前を付けると、その場所まで自動でスクロールする
+ * (ログイン画面の「パスワードを忘れた方はこちら」から、お問い合わせの欄を直接見せるため)。
  */
 export function PrivacyPolicy() {
+  const { hash } = useLocation();
+
+  // 画面の切り替え(SPA)では、ブラウザ標準の「#名前の場所へ移動」が働かないため、自前でスクロールする
+  useEffect(() => {
+    if (!hash) return;
+    document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [hash]);
+
   return (
     <>
       <Header />
@@ -77,10 +89,15 @@ export function PrivacyPolicy() {
           </p>
         </section>
 
-        <section>
+        <section id="contact" style={{ scrollMarginTop: 80 }}>
           <h2 style={{ fontSize: 16, marginBottom: 8 }}>お問い合わせ</h2>
           <p style={{ margin: 0, lineHeight: 1.7 }}>
             ご質問・ご要望は
+            <a href="mailto:hello.yona.studio@gmail.com">hello.yona.studio@gmail.com</a>
+            までご連絡ください。
+          </p>
+          <p style={{ margin: "12px 0 0", lineHeight: 1.7 }}>
+            パスワードを忘れた方は、
             <a href="mailto:hello.yona.studio@gmail.com">hello.yona.studio@gmail.com</a>
             までご連絡ください。
           </p>
