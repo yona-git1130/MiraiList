@@ -7,7 +7,7 @@ import { Header } from "../components/Header";
  * 何のデータをどう扱っているかを平易な言葉でまとめたもの(法律の専門文書ではない)。
  * ログイン不要で誰でも閲覧できる。
  * `/privacy#contact` のようにURLの末尾に#名前を付けると、その場所まで自動でスクロールする
- * (ログイン画面の「パスワードを忘れた方はこちら」から、お問い合わせの欄を直接見せるため)。
+ * (ログイン画面の「パスワードをお忘れの方はこちら」から、お問い合わせの欄を直接見せるため)。
  */
 export function PrivacyPolicy() {
   const { hash } = useLocation();
@@ -97,7 +97,7 @@ export function PrivacyPolicy() {
             までご連絡ください。
           </p>
           <p style={{ margin: "12px 0 0", lineHeight: 1.7 }}>
-            パスワードを忘れた方は、
+            パスワードをお忘れの方は、
             <a href="mailto:hello.yona.studio@gmail.com">hello.yona.studio@gmail.com</a>
             までご連絡ください。
           </p>
